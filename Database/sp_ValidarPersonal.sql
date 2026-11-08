@@ -1,4 +1,7 @@
-CREATE PROCEDURE sp_ValidarPersonal
+USE MiCubiculoDB;
+GO
+
+CREATE OR ALTER PROCEDURE sp_ValidarPersonal
     @usuario VARCHAR(50),
     @contrasena VARCHAR(255)
 AS
