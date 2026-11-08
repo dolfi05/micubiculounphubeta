@@ -1,4 +1,7 @@
-CREATE PROCEDURE sp_LiberarReservaManual
+USE MiCubiculoDB;
+GO
+
+CREATE OR ALTER PROCEDURE sp_LiberarReservaManual
     @id_reserva INT
 AS
 BEGIN

@@ -1,7 +1,7 @@
-DROP PROCEDURE IF EXISTS sp_RegistrarReserva;
+USE MiCubiculoDB;
 GO
 
-CREATE PROCEDURE sp_RegistrarReserva
+CREATE OR ALTER PROCEDURE sp_RegistrarReserva
     @id_cubiculo INT,
     @hora_inicio DATETIME,
     @json_integrantes NVARCHAR(MAX) -- Recibe algo como: '[{"id": 1, "resp": 1}, {"id": 2, "resp": 0}]'

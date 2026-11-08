@@ -1,4 +1,7 @@
-CREATE PROCEDURE sp_ConsultarDisponibilidad
+USE MiCubiculoDB;
+GO
+
+CREATE OR ALTER PROCEDURE sp_ConsultarDisponibilidad
 AS
 BEGIN
     SET NOCOUNT ON;
