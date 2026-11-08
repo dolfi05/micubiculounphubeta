@@ -7,7 +7,7 @@ from functools import wraps
 
 import pyodbc
 from dotenv import load_dotenv
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, render_template, request, session
 from werkzeug.security import check_password_hash
 
 from db import get_connection
@@ -477,6 +477,13 @@ def liberar_reserva(id_reserva):
         raise
     finally:
         conn.close()
+
+# ------------------------------------------------------------------
+# Paginas (HTML)
+# ------------------------------------------------------------------
+@app.route("/")
+def pagina_ingreso():
+    return render_template("ingreso.html")
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
