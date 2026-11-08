@@ -1,0 +1,186 @@
+:root {
+  --verde: #1B7A3F;
+  --verde-oscuro: #14532D;
+  --fondo: #F4F1EA;
+  --texto: #1F2A24;
+  --texto-suave: #5F6660;
+  --borde: #D9D6C8;
+  --rojo: #B3403B;
+  --rojo-fondo: #FBE9E7;
+
+  --bs-body-font-family: "Work Sans", system-ui, sans-serif;
+  --bs-body-bg: var(--fondo);
+  --bs-body-color: var(--texto);
+}
+
+h1, h2, h3, h4, h5, .fuente-titulo {
+  font-family: "Sora", system-ui, sans-serif;
+}
+
+/* ---------- Pantalla de ingreso: dos mitades ---------- */
+.panel-verde {
+  background: var(--verde);
+  color: #fff;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.panel-verde h1 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.panel-verde ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.panel-verde li::before {
+  content: "•";
+  margin-right: 10px;
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.marca-icono {
+  width: 56px;
+  height: 56px;
+  background: #fff;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+}
+
+.marca-nombre {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.marca-sub {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+}
+
+.panel-derecho {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+.tarjeta-ingreso {
+  background: #fff;
+  border: 1px solid #E6E2D6;
+  border-radius: 24px;
+  padding: 32px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.tarjeta-ingreso h2 {
+  color: var(--verde-oscuro);
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
+/* ---------- Pestañas Estudiante / Personal ---------- */
+.pestanas {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--fondo);
+  border-radius: 14px;
+  margin-bottom: 28px;
+}
+
+.pestana {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  border-radius: 10px;
+  color: var(--texto-suave);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.pestana.activa {
+  background: #fff;
+  color: var(--verde-oscuro);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* ---------- Formularios y botones ---------- */
+.form-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.form-control {
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.form-control:focus {
+  border-color: var(--verde);
+  box-shadow: 0 0 0 3px rgba(27, 122, 63, 0.18);
+}
+
+.form-control.campo-error {
+  border-color: var(--rojo);
+}
+
+.texto-error {
+  color: var(--rojo);
+  font-size: 0.82rem;
+  margin-top: 6px;
+}
+
+.btn-verde {
+  background: var(--verde);
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 20px;
+  font-weight: 600;
+}
+
+.btn-verde:hover,
+.btn-verde:focus {
+  background: var(--verde-oscuro);
+  color: #fff;
+}
+
+.btn-verde:disabled {
+  background: var(--verde);
+  opacity: 0.65;
+  color: #fff;
+}
+
+/* ---------- Cuadro de errores (como el del mockup) ---------- */
+.caja-error {
+  background: var(--rojo-fondo);
+  border: 1px solid var(--rojo);
+  color: #8E2A26;
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.caja-error ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
