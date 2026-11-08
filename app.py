@@ -29,24 +29,14 @@ def obtener_disponibilidad():
     conn = get_db_connection()
     if not conn:
         return jsonify({"error": "Error de conexión a la base de datos"}), 500
-    
     try:
         cursor = conn.cursor()
-        # Ejecutamos el SP que limpia reservas vencidas y trae el estado actual
         cursor.execute("EXEC sp_ConsultarDisponibilidad")
         filas = cursor.fetchall()
         
-        cubiculos = []
-        for fila in filas:
-            cubiculos.append({
-                "id_cubiculo": fila.id_cubiculo,
-                "numero": fila.numero,
-                "tipo": fila.tipo,
-                "capacidad_minima": fila.capacidad_minima,
-                "estado": fila.estado,
-                "se_libera_a": fila.se_libera_a.strftime('%Y-%m-%d %H:%M:%S') if fila.se_libera_a else None
-            })
-            
+        cubiculos = [{"id_cubiculo": f.id_cubiculo, "numero": f.numero, "tipo": f.tipo, 
+        "capacidad_minima": f.capacidad_minima, "estado": f.estado, 
+        "se_libera_a": f.se_libera_a.strftime('%Y-%m-%d %H:%M:%S') if f.se_libera_a else None} for f in filas]
         return jsonify(cubiculos), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -59,48 +49,73 @@ def obtener_disponibilidad():
 @app.route('/api/reservas', methods=['POST'])
 def registrar_reserva():
     data = request.json
-    
-    # Extraemos los datos que nos enviará el Frontend
     id_cubiculo = data.get('id_cubiculo')
-    hora_inicio = data.get('hora_inicio') # Formato esperado: 'YYYY-MM-DD HH:MM:SS'
-    integrantes = data.get('integrantes') # Ejemplo: [{"id": 1, "resp": 1}, {"id": 2, "resp": 0}]
+    hora_inicio = data.get('hora_inicio')
+    integrantes = data.get('integrantes')
     
-    # Validación básica de datos completos (RF-03)
     if not all([id_cubiculo, hora_inicio, integrantes]):
         return jsonify({"error": "Faltan datos obligatorios para la reserva."}), 400
         
     conn = get_db_connection()
-    if not conn:
-        return jsonify({"error": "Error de conexión a la base de datos"}), 500
-        
     try:
         cursor = conn.cursor()
-        # Convertimos la lista de Python a un string JSON para SQL Server
-        json_integrantes = json.dumps(integrantes)
-        
-        # Ejecutamos el SP de reserva
-        cursor.execute("""
-            EXEC sp_RegistrarReserva 
-            @id_cubiculo=?, @hora_inicio=?, @json_integrantes=?
-        """, (id_cubiculo, hora_inicio, json_integrantes))
-        
+        cursor.execute("EXEC sp_RegistrarReserva @id_cubiculo=?, @hora_inicio=?, @json_integrantes=?", 
+        (id_cubiculo, hora_inicio, json.dumps(integrantes)))
         row = cursor.fetchone()
-        conn.commit() # ¡Importante! Guardar los cambios físicos
-        
+        conn.commit()
         return jsonify({"mensaje": row.mensaje, "id_reserva": row.id_reserva}), 201
-        
     except pyodbc.Error as e:
-        conn.rollback() # Si algo falla, deshacemos la transacción
-        
-        # Extraemos el mensaje de error personalizado que lanzamos desde SQL Server (THROW)
+        conn.rollback()
         error_sql = e.args[1]
-        
-        # Limpiamos el texto del error que devuelve pyodbc para que el Frontend lo muestre bonito
         mensaje_limpio = error_sql.split(']')[[-1]].strip() if ']' in error_sql else error_sql
-        
         return jsonify({"error": mensaje_limpio}), 400
     finally:
-        conn.close()
+        if conn: conn.close()
+
+# ==========================================
+# ENDPOINT 3: Inicio de Sesión del Personal (RF-07)
+# ==========================================
+@app.route('/api/login', methods=['POST'])
+def login_personal():
+    data = request.json
+    usuario = data.get('usuario')
+    contrasena = data.get('contrasena')
+
+    if not usuario or not contrasena:
+        return jsonify({"error": "Usuario y contraseña son requeridos"}), 400
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("EXEC sp_ValidarPersonal @usuario=?, @contrasena=?", (usuario, contrasena))
+        row = cursor.fetchone()
+        
+        if row:
+            return jsonify({"id_personal": row.id_personal, "usuario": row.usuario, "nombre": row.nombre}), 200
+        else:
+            return jsonify({"error": "Credenciales inválidas"}), 401
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn: conn.close()
+
+# ==========================================
+# ENDPOINT 4: Liberación Manual de Cubículo (RF-06)
+# ==========================================
+@app.route('/api/reservas/<int:id_reserva>/liberar', methods=['POST'])
+def liberar_reserva(id_reserva):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("EXEC sp_LiberarReservaManual @id_reserva=?", (id_reserva,))
+        row = cursor.fetchone()
+        conn.commit()
+        return jsonify({"mensaje": row.mensaje if row else "Operación procesada"}), 200
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        if conn: conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
