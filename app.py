@@ -2,6 +2,7 @@ import json
 import os
 import re
 import time
+import threading
 from datetime import datetime
 from functools import wraps
 
@@ -510,6 +511,20 @@ def liberar_reserva(id_reserva):
     finally:
         conn.close()
 
+def finalizar_vencidas_periodicamente(intervalo=30):
+    """Cada 'intervalo' segundos pasa a finalizada toda reserva cuya hora de fin ya paso (RF-04)."""
+    while True:
+        try:
+            conn = get_connection()
+            try:
+                conn.cursor().execute("EXEC sp_FinalizarVencidas")
+                conn.commit()
+            finally:
+                conn.close()
+        except Exception:
+            app.logger.exception("No se pudieron finalizar las reservas vencidas")
+        time.sleep(intervalo)
+
 
 # ------------------------------------------------------------------
 # Paginas (HTML)
@@ -560,4 +575,7 @@ def pagina_registro_presencial():
 
 
 if __name__ == "__main__":
+    # Con debug=True Flask crea dos procesos; solo el real lleva WERKZEUG_RUN_MAIN
+    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
+        threading.Thread(target=finalizar_vencidas_periodicamente, daemon=True).start()
     app.run(debug=True, port=5000)
