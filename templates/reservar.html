@@ -1,0 +1,91 @@
+{% extends "base_estudiante.html" %}
+
+{% block titulo %}Reservar cubículo {{ numero }}{% endblock %}
+
+{% block pagina %}
+<div id="datos-pagina" data-numero="{{ numero }}"></div>
+
+<a href="/disponibilidad" class="enlace-volver">‹ Volver a disponibilidad</a>
+<h1 class="titulo-pagina mt-2 mb-4">Reservar cubículo {{ numero }}</h1>
+
+<div id="caja-errores" class="caja-error d-none" role="alert">
+  <strong>No pudimos crear la reserva</strong>
+  <ul id="lista-errores"></ul>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <form id="form-reserva" class="tarjeta-form" novalidate>
+
+      <h2 class="h5 mb-1">Tus datos</h2>
+      <p class="text-secondary small">Los tomamos de tu ingreso. Quien reserva cuenta como el primer integrante.</p>
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label" for="mi-nombre">Nombre</label>
+          <input type="text" id="mi-nombre" class="form-control campo-solo-lectura" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="mi-matricula">Matrícula</label>
+          <input type="text" id="mi-matricula" class="form-control campo-solo-lectura" readonly>
+        </div>
+      </div>
+
+      <hr class="separador">
+
+      <h2 class="h5 mb-1">Hora de inicio</h2>
+      <p class="text-secondary small">Solo se puede reservar para hoy. Cada bloque dura 2 horas.</p>
+      <select id="hora" class="form-select selector-hora"></select>
+      <div id="sin-horas" class="texto-error d-none">
+        No hay horas disponibles hoy para este cubículo (la biblioteca puede estar cerrada).
+      </div>
+
+      <hr class="separador">
+
+      <h2 class="h5 mb-1">Tu grupo</h2>
+      <p class="text-secondary small" id="texto-minimo"></p>
+      <div class="d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Cantidad de integrantes</span>
+        <div class="selector-cantidad">
+          <button type="button" id="menos" class="btn-paso" aria-label="Quitar un integrante">−</button>
+          <span id="cantidad" class="cantidad-num">2</span>
+          <button type="button" id="mas" class="btn-paso" aria-label="Agregar un integrante">+</button>
+        </div>
+      </div>
+      <div id="aviso-minimo" class="texto-error text-end mb-3"></div>
+
+      <div id="integrantes"></div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="/disponibilidad" class="btn btn-salir">Cancelar</a>
+        <button type="submit" id="boton-confirmar" class="btn btn-verde">Confirmar reserva</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="resumen-verde mb-3">
+      <div class="resumen-titulo">TU RESERVA</div>
+      <div class="d-flex align-items-baseline gap-3 mb-3">
+        <span class="resumen-numero">{{ numero }}</span>
+        <span id="resumen-tipo">Cubículo</span>
+      </div>
+      <div class="resumen-fila"><span>Inicio</span><strong id="resumen-inicio">–</strong></div>
+      <div class="resumen-fila"><span>Duración</span><strong>2 horas</strong></div>
+      <div class="resumen-fila"><span>Termina</span><strong id="resumen-fin">–</strong></div>
+    </div>
+
+    <div class="tarjeta-reglas">
+      <h3 class="h6 mb-2">Reglas</h3>
+      <ul class="mb-0">
+        <li>Cubículos 1 al 10, excepto el 8: mínimo 2 personas.</li>
+        <li>Cubículo 8: mínimo 7 personas.</li>
+        <li>Te avisaremos 10 minutos antes de que termine el bloque.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_pagina %}
+<script src="{{ url_for('static', filename='js/reservar.js') }}"></script>
+{% endblock %}
