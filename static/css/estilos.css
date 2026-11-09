@@ -738,3 +738,6 @@ h1, h2, h3, h4, h5, .fuente-titulo {
 }
 
 .chip-cubiculo.chip-activo .insignia-grupos { background: #fff; color: var(--verde-oscuro); }
+
+/* ---------- Ventana de cancelar ---------- */
+.icono-alerta { background: #F7D9D7; }

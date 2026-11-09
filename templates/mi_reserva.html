@@ -80,6 +80,30 @@
   </div>
 
 </div>
+
+<!-- Ventana de confirmación para cancelar -->
+<div class="modal fade" id="modal-cancelar" tabindex="-1" aria-labelledby="titulo-cancelar" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-redondo">
+      <div class="modal-body p-4 text-center">
+        <div class="icono-circulo icono-alerta mb-3">
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#A8403C" stroke-width="2.4"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 8v5"/><circle cx="12" cy="16.5" r="0.6" fill="#A8403C"/>
+            <path d="M10.3 3.9L2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>
+          </svg>
+        </div>
+        <h2 class="h4" id="titulo-cancelar">¿Cancelar tu reserva?</h2>
+        <p class="text-secondary mb-4" id="texto-cancelar"></p>
+        <div class="d-flex justify-content-center gap-2">
+          <button type="button" class="btn btn-salir" data-bs-dismiss="modal">No, mantenerla</button>
+          <button type="button" class="btn btn-rojo" id="confirmar-cancelar">Sí, cancelar reserva</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block scripts_pagina %}
