@@ -19,7 +19,7 @@ BEGIN
         ------------------------------------------------------------------
         DECLARE @ahora_min DATETIME = DATEADD(MINUTE, DATEDIFF(MINUTE, 0, ISNULL(@ahora, GETDATE())), 0);
         DECLARE @hoy       DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @ahora_min), 0);
-        DECLARE @inicio    DATETIME = ISNULL(@hora_inicio, @ahora_min);
+                DECLARE @inicio    DATETIME = DATEADD(MINUTE, DATEDIFF(MINUTE, 0, ISNULL(@hora_inicio, @ahora_min)), 0);
         DECLARE @fin       DATETIME = DATEADD(HOUR, 2, @inicio);   -- bloque fijo de 2 horas
         DECLARE @dia       DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @inicio), 0);
         -- 1900-01-01 fue lunes, asi que 0 = lunes ... 5 = sabado, 6 = domingo (sin depender del idioma)
@@ -63,9 +63,6 @@ BEGIN
         IF @capacidad IS NULL
             INSERT INTO @errores (mensaje) VALUES (N'El cubiculo indicado no existe.');
 
-        -- Horario
-        IF @hora_inicio IS NOT NULL AND @hora_inicio <> DATEADD(HOUR, DATEDIFF(HOUR, 0, @hora_inicio), 0)
-            INSERT INTO @errores (mensaje) VALUES (N'La hora de inicio debe ser en punto (por ejemplo 14:00).');
 
         IF @dia <> @hoy
             INSERT INTO @errores (mensaje) VALUES (N'Solo se puede reservar para el dia de hoy.');
@@ -73,7 +70,7 @@ BEGIN
             INSERT INTO @errores (mensaje) VALUES (N'La biblioteca esta cerrada los domingos.');
         ELSE IF @inicio < @apertura OR @fin > @cierre
             INSERT INTO @errores (mensaje) VALUES
-                (N'El bloque de 2 horas debe estar dentro del horario de la biblioteca (lunes a viernes 8:00 a 21:00, sabados 8:00 a 15:00).');
+                                (N'El bloque de 2 horas debe terminar antes del cierre. Ultimo inicio: 19:00 de lunes a viernes y 13:00 los sabados (la biblioteca abre a las 8:00 y cierra a las 21:00, sabados a las 15:00).');
 
         IF @dia = @hoy AND @inicio < @ahora_min
             INSERT INTO @errores (mensaje) VALUES (N'No se pueden reservar horas que ya pasaron.');
