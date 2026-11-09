@@ -2,7 +2,7 @@ const $ = (id) => document.getElementById(id);
 const vistas = ["vista-ninguna", "vista-activa", "vista-termino"];
 
 let reserva = null;
-let restante = null;   // segundos que faltan para terminar (si ya empezó)
+let restante = null;    // segundos que faltan para terminar (si ya empezó)
 let faltaInicio = null; // segundos que faltan para empezar (si es futura)
 let duracionTotal = 7200;
 let temporizador = null;
@@ -108,13 +108,18 @@ async function cargar() {
       $("etiqueta-tiempo").textContent = "TIEMPO RESTANTE";
       $("reloj-unidad").textContent = restante >= 3600 ? "horas : minutos : segundos" : "minutos : segundos";
     } else {
-      // Reserva futura: segundos hasta que empiece, calculados con las horas del servidor
+      // Reserva futura: segundos hasta que empiece
       restante = null;
       faltaInicio = Math.max(1, Math.round((new Date(reserva.hora_inicio) - new Date()) / 1000));
       $("etiqueta-tiempo").textContent = "TU BLOQUE EMPIEZA A LAS " + hora(reserva.hora_inicio);
       $("reloj-unidad").textContent = "tiempo para que empiece";
       $("barra").style.width = "0%";
     }
+
+    // Botón de cancelar: solo para el responsable
+    $("cancelar-caja").classList.toggle("d-none", !reserva.es_responsable);
+    $("cancelar-error").classList.add("d-none");
+
     mostrar("vista-activa");
     pintar();
   } catch (error) {
@@ -122,6 +127,45 @@ async function cargar() {
     $("estado-cargando").classList.remove("d-none");
   }
 }
+
+// ---------- Cancelar reserva (solo el responsable) ----------
+$("boton-cancelar").addEventListener("click", async () => {
+  if (!reserva) return;
+
+  // Comparamos con la hora local del navegador (new Date() sin zona interpreta el texto como local)
+  const aunNoEmpieza = new Date(reserva.hora_inicio) > new Date();
+  const aviso = aunNoEmpieza
+    ? "¿Cancelar tu reserva del cubículo " + reserva.numero + "?"
+    : "¿Cancelar tu reserva? El cubículo " + reserva.numero + " se liberará ahora mismo.";
+  if (!window.confirm(aviso)) return;
+
+  const boton = $("boton-cancelar");
+  const cajaError = $("cancelar-error");
+  boton.disabled = true;
+  boton.textContent = "Cancelando...";
+  cajaError.classList.add("d-none");
+  try {
+    const respuesta = await fetch("/api/mi-reserva/cancelar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_reserva: reserva.id_reserva }),
+    });
+    if (respuesta.status === 401) { window.location.href = "/"; return; }
+    const datos = await respuesta.json().catch(() => ({}));
+    if (!respuesta.ok) {
+      cajaError.textContent = datos.error || "No se pudo cancelar la reserva.";
+      cajaError.classList.remove("d-none");
+      return;
+    }
+    await cargar();   // muestra "Tu bloque terminó"
+  } catch (error) {
+    cajaError.textContent = "No pudimos conectar con el servidor.";
+    cajaError.classList.remove("d-none");
+  } finally {
+    boton.disabled = false;
+    boton.textContent = "Cancelar reserva";
+  }
+});
 
 cargar();
 temporizador = setInterval(tic, 1000);
