@@ -516,5 +516,9 @@ def pagina_login_personal():
 def pagina_panel():
     return render_template("panel.html", seccion="panel")
 
+@app.route("/registro-presencial")
+def pagina_registro_presencial():
+    return render_template("registro_presencial.html", seccion="registro")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

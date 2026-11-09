@@ -727,3 +727,14 @@ h1, h2, h3, h4, h5, .fuente-titulo {
 
 .btn-rojo:hover { background: #8E2A26; color: #fff; }
 .btn-rojo:disabled { background: #A8403C; opacity: 0.65; color: #fff; }
+
+/* ---------- Registro presencial ---------- */
+.chip-cubiculo { cursor: pointer; }
+
+.chip-cubiculo.chip-activo {
+  background: var(--verde);
+  border-color: var(--verde);
+  color: #fff;
+}
+
+.chip-cubiculo.chip-activo .insignia-grupos { background: #fff; color: var(--verde-oscuro); }

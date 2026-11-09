@@ -1,0 +1,99 @@
+{% extends "base_personal.html" %}
+
+{% block titulo %}Registro presencial{% endblock %}
+
+{% block pagina %}
+<a href="/panel" class="enlace-volver">‹ Volver al panel</a>
+<h1 class="titulo-pagina mt-2">Registrar reserva presencial</h1>
+<p class="text-secondary mb-4">Para quien llega al mostrador. Se aplican las mismas reglas que en la reserva en línea.</p>
+
+<div id="caja-errores" class="caja-error d-none" role="alert">
+  <strong>No se pudo registrar la reserva</strong>
+  <ul id="lista-errores"></ul>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <form id="form-presencial" class="tarjeta-form" novalidate>
+
+      <h2 class="h5 mb-3">Cubículo libre</h2>
+      <div class="d-flex flex-wrap gap-2" id="cubiculos-libres"></div>
+      <div id="sin-cubiculos" class="texto-error d-none">Ahora mismo no hay cubículos libres.</div>
+
+      <hr class="separador">
+
+      <h2 class="h5 mb-3">Responsable</h2>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="resp-nombre">Nombre completo</label>
+          <input type="text" id="resp-nombre" class="form-control" placeholder="Nombre del estudiante" maxlength="100">
+          <div id="err-resp-nombre" class="texto-error"></div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="resp-matricula">Matrícula</label>
+          <input type="text" id="resp-matricula" class="form-control" placeholder="Ej. 24-0302" maxlength="20">
+          <div id="err-resp-matricula" class="texto-error"></div>
+        </div>
+      </div>
+
+      <hr class="separador">
+
+      <h2 class="h5 mb-1">Hora de inicio</h2>
+      <p class="text-secondary small">Solo se puede reservar para hoy. Cada bloque dura 2 horas.</p>
+      <select id="hora" class="form-select selector-hora"></select>
+      <div id="sin-horas" class="texto-error d-none">
+        No hay horas disponibles hoy para este cubículo (la biblioteca puede estar cerrada).
+      </div>
+
+      <hr class="separador">
+
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="h5 mb-0">Grupo</h2>
+          <small class="text-secondary" id="texto-minimo">Elige un cubículo.</small>
+        </div>
+        <div class="selector-cantidad">
+          <button type="button" id="menos" class="btn-paso" aria-label="Quitar un integrante">−</button>
+          <span id="cantidad" class="cantidad-num">2</span>
+          <button type="button" id="mas" class="btn-paso" aria-label="Agregar un integrante">+</button>
+        </div>
+      </div>
+      <div id="aviso-minimo" class="texto-error text-end mb-3"></div>
+
+      <p class="text-secondary small mt-3 mb-2">El responsable cuenta como el integrante 1.</p>
+      <div id="integrantes"></div>
+
+      <div class="d-flex justify-content-end gap-2 mt-4">
+        <a href="/panel" class="btn btn-salir">Cancelar</a>
+        <button type="submit" id="boton-registrar" class="btn btn-verde">Registrar reserva</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="resumen-verde mb-3">
+      <div class="resumen-titulo">RESUMEN</div>
+      <div class="d-flex align-items-baseline gap-3 mb-3">
+        <span class="resumen-numero" id="resumen-numero">–</span>
+        <span id="resumen-tipo">Sin cubículo</span>
+      </div>
+      <div class="resumen-fila"><span>Inicio</span><strong id="resumen-inicio">–</strong></div>
+      <div class="resumen-fila"><span>Duración</span><strong>2 horas</strong></div>
+      <div class="resumen-fila"><span>Termina</span><strong id="resumen-fin">–</strong></div>
+    </div>
+
+    <div class="tarjeta-reglas">
+      <h3 class="h6 mb-2">Reglas</h3>
+      <ul class="mb-0">
+        <li>Cubículos estándar: mínimo 2 personas.</li>
+        <li>Cubículo 8: mínimo 7 personas.</li>
+        <li>Solo se muestran los cubículos libres.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_pagina %}
+<script src="{{ url_for('static', filename='js/registro_presencial.js') }}"></script>
+{% endblock %}
