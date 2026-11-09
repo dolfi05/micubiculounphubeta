@@ -1,0 +1,74 @@
+{% extends "base_personal.html" %}
+
+{% block titulo %}Panel de ocupación{% endblock %}
+
+{% block pagina %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+  <div>
+    <h1 class="titulo-pagina">Panel de ocupación</h1>
+    <p class="text-secondary mb-0" id="subtitulo">Estado actual de los 10 cubículos</p>
+  </div>
+  <a href="/registro-presencial" class="btn btn-verde">+ Registrar reserva presencial</a>
+</div>
+
+<div id="aviso-error" class="caja-error d-none" role="alert"></div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-4"><div class="contador contador-ancho">Libres<div class="contador-num texto-verde" id="n-libres">–</div></div></div>
+  <div class="col-sm-4"><div class="contador contador-ancho">Ocupados<div class="contador-num" id="n-ocupados">–</div></div></div>
+  <div class="col-sm-4"><div class="contador contador-ancho">Por vencer<div class="contador-num texto-ambar" id="n-por-vencer">–</div></div></div>
+</div>
+
+<div class="tarjeta-tabla table-responsive">
+  <table class="table tabla-panel align-middle mb-0">
+    <thead>
+      <tr>
+        <th>Cubículo</th><th>Estado</th><th>Responsable</th><th>Personas</th><th>Horario</th>
+        <th class="text-end">Acción</th>
+      </tr>
+    </thead>
+    <tbody id="filas"></tbody>
+  </table>
+</div>
+
+<!-- Ventana "Ver / liberar" -->
+<div class="modal fade" id="modal-reserva" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-redondo">
+      <div class="modal-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span class="cubiculo-numero" id="m-numero"></span>
+            <span class="etiqueta" id="m-estado"></span>
+          </div>
+          <button type="button" class="btn-cerrar" data-bs-dismiss="modal" aria-label="Cerrar">×</button>
+        </div>
+
+        <div id="m-error" class="caja-error d-none" role="alert"></div>
+
+        <div class="fila-dato"><span>Responsable</span><strong id="m-responsable"></strong></div>
+        <div class="fila-dato"><span>Horario</span><strong id="m-horario"></strong></div>
+        <div class="fila-dato"><span>Personas</span><strong id="m-personas"></strong></div>
+
+        <div class="caja-matriculas">
+          <small class="fw-semibold">Matrículas del grupo</small>
+          <div id="m-matriculas"></div>
+        </div>
+
+        <p class="text-secondary small mt-3">
+          Al liberar, la reserva pasa a "finalizada" y el cubículo queda disponible de inmediato.
+        </p>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button type="button" class="btn btn-salir" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-rojo" id="m-liberar">Liberar cubículo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_pagina %}
+<script src="{{ url_for('static', filename='js/panel.js') }}"></script>
+{% endblock %}

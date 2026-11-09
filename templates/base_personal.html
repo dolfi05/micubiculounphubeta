@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<nav class="barra-superior barra-personal">
+  <div class="contenedor-barra">
+    <a class="marca-barra" href="/panel">
+      <span class="marca-icono-chico marca-icono-blanco">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B7A3F"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 4v8a6 6 0 0 0 12 0V4"/>
+          <path d="M9 11l2.2 2.2L15 9.5"/>
+        </svg>
+      </span>
+      <span class="fuente-titulo">MiCubículo</span>
+      <span class="insignia-personal">PERSONAL</span>
+    </a>
+
+    <div class="enlaces-barra">
+      <a href="/panel" class="enlace-barra {% if seccion == 'panel' %}activo{% endif %}">Panel de ocupación</a>
+      <a href="/registro-presencial" class="enlace-barra {% if seccion == 'registro' %}activo{% endif %}">Registro presencial</a>
+    </div>
+
+    <div class="usuario-barra">
+      <span class="fw-semibold" id="usuario-nombre"></span>
+      <button type="button" class="btn btn-salir btn-salir-claro" id="boton-salir">Salir</button>
+    </div>
+  </div>
+</nav>
+
+<main class="contenedor-pagina">
+  {% block pagina %}{% endblock %}
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/personal.js') }}"></script>
+{% block scripts_pagina %}{% endblock %}
+{% endblock %}

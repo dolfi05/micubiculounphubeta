@@ -110,8 +110,7 @@ async function cargar() {
     } else {
       // Reserva futura: segundos hasta que empiece, calculados con las horas del servidor
       restante = null;
-      faltaInicio = Math.max(
-        1, Math.round((new Date(reserva.hora_inicio) - new Date(reserva.hora_fin)) / 1000) + duracionTotal);
+      faltaInicio = Math.max(1, Math.round((new Date(reserva.hora_inicio) - new Date()) / 1000));
       $("etiqueta-tiempo").textContent = "TU BLOQUE EMPIEZA A LAS " + hora(reserva.hora_inicio);
       $("reloj-unidad").textContent = "tiempo para que empiece";
       $("barra").style.width = "0%";
