@@ -9,14 +9,9 @@ const botonRegistrar = $("boton-registrar");
 
 let libres = [];      // cubículos disponibles ahora
 let cubiculo = null;  // el elegido
-let horas = [];
 let cantidad = 2;
 let otros = [];       // integrantes 2..n
 let campos = [];
-
-function hora(textoIso) {
-  return textoIso.substring(11, 16);
-}
 
 function mostrarErrores(lista) {
   listaErrores.replaceChildren();
@@ -68,7 +63,7 @@ function dibujarCubiculos() {
   }
 }
 
-async function elegirCubiculo(c) {
+function elegirCubiculo(c) {
   cubiculo = c;
   dibujarCubiculos();
   $("resumen-numero").textContent = c.numero;
@@ -77,32 +72,18 @@ async function elegirCubiculo(c) {
   cantidad = Math.max(c.capacidad_minima, 2);
   actualizarCantidad();
 
-  selectorHora.replaceChildren();
-  horas = [];
-  try {
-    const r = await fetch("/api/cubiculos/" + c.id_cubiculo + "/horas");
-    horas = r.ok ? await r.json() : [];
-  } catch (e) { horas = []; }
-
-  for (const h of horas) {
-    const opcion = document.createElement("option");
-    opcion.value = h.es_ahora ? "ahora" : h.hora_inicio;
-    opcion.textContent = h.etiqueta + "  –  termina " + hora(h.hora_fin);
-    selectorHora.appendChild(opcion);
-  }
-  const sinHoras = horas.length === 0;
-  selectorHora.disabled = sinHoras;
-  botonRegistrar.disabled = sinHoras;
-  $("sin-horas").classList.toggle("d-none", !sinHoras);
+  selectorHora.value = horaActualTexto();
   actualizarResumen();
+  cargarOcupadas(c.id_cubiculo, $("ocupadas"));
 }
 
 function actualizarResumen() {
-  const h = horas.find((x) => (x.es_ahora ? "ahora" : x.hora_inicio) === selectorHora.value);
-  $("resumen-inicio").textContent = h ? hora(h.hora_inicio) : "–";
-  $("resumen-fin").textContent = h ? hora(h.hora_fin) : "–";
+  const v = selectorHora.value;
+  $("resumen-inicio").textContent = v || "–";
+  $("resumen-fin").textContent = sumarDosHoras(v);
 }
 selectorHora.addEventListener("change", actualizarResumen);
+selectorHora.addEventListener("input", actualizarResumen);
 
 // ---------- Integrantes ----------
 function crearCampo(placeholder, valor, alCambiar, largo) {
@@ -165,13 +146,11 @@ function validar() {
   const errores = [];
   if (!cubiculo) {
     errores.push("Elige un cubículo libre.");
-  } else {
-    if (horas.length === 0) errores.push("No hay horas disponibles hoy para este cubículo.");
-    if (cantidad < cubiculo.capacidad_minima) {
-      errores.push("El cubículo " + cubiculo.numero + " requiere al menos " + cubiculo.capacidad_minima +
-                   " personas. El grupo tiene " + cantidad + ".");
-    }
+  } else if (cantidad < cubiculo.capacidad_minima) {
+    errores.push("El cubículo " + cubiculo.numero + " requiere al menos " + cubiculo.capacidad_minima +
+                 " personas. El grupo tiene " + cantidad + ".");
   }
+  if (!inicioIso(selectorHora.value)) errores.push("Escribe la hora de inicio (por ejemplo 14:35).");
 
   const nombre = $("resp-nombre").value.trim();
   const matricula = $("resp-matricula").value.trim();
@@ -238,7 +217,7 @@ $("form-presencial").addEventListener("submit", async (evento) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id_cubiculo: cubiculo.id_cubiculo,
-        hora_inicio: selectorHora.value,
+        hora_inicio: inicioIso(selectorHora.value),
         cantidad: cantidad,
         integrantes: integrantes,
       }),
@@ -252,7 +231,7 @@ $("form-presencial").addEventListener("submit", async (evento) => {
   } catch (error) {
     mostrarErrores(["No pudimos conectar con el servidor. Intenta de nuevo."]);
   } finally {
-    botonRegistrar.disabled = horas.length === 0;
+    botonRegistrar.disabled = false;
     botonRegistrar.textContent = "Registrar reserva";
   }
 });
@@ -272,8 +251,7 @@ async function iniciar() {
     actualizarCantidad();
     const pedido = Number(new URLSearchParams(window.location.search).get("cubiculo"));
     const inicial = libres.find((c) => c.numero === pedido);
-    if (inicial) await elegirCubiculo(inicial);
-    else botonRegistrar.disabled = false;
+    if (inicial) elegirCubiculo(inicial);
   } catch (error) {
     mostrarErrores(["No pudimos cargar los cubículos. Recarga la página."]);
   }

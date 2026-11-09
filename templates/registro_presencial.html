@@ -39,11 +39,9 @@
       <hr class="separador">
 
       <h2 class="h5 mb-1">Hora de inicio</h2>
-      <p class="text-secondary small">Solo se puede reservar para hoy. Cada bloque dura 2 horas.</p>
-      <select id="hora" class="form-select selector-hora"></select>
-      <div id="sin-horas" class="texto-error d-none">
-        No hay horas disponibles hoy para este cubículo (la biblioteca puede estar cerrada).
-      </div>
+      <p class="text-secondary small">Solo se puede reservar para hoy, desde las 8:00. Escribe la hora de inicio: el bloque dura 2 horas. Último inicio: 19:00 (sábados 13:00).</p>
+      <input type="time" id="hora" class="form-control selector-hora">
+      <div id="ocupadas" class="text-secondary mt-2"></div>
 
       <hr class="separador">
 
@@ -95,5 +93,6 @@
 {% endblock %}
 
 {% block scripts_pagina %}
+<script src="{{ url_for('static', filename='js/hora_libre.js') }}"></script>
 <script src="{{ url_for('static', filename='js/registro_presencial.js') }}"></script>
 {% endblock %}

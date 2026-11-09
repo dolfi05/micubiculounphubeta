@@ -9,14 +9,9 @@ const botonConfirmar = document.getElementById("boton-confirmar");
 
 let cubiculo = null;
 let yo = null;
-let horas = [];
 let cantidad = 1;
 let otros = [];    // datos escritos de los integrantes 2..n
 let campos = [];   // referencias a los inputs, para marcar errores
-
-function hora(textoIso) {
-  return textoIso.substring(11, 16);   // "2026-11-09T10:00:00" -> "10:00"
-}
 
 function mostrarErrores(lista) {
   listaErrores.replaceChildren();
@@ -47,9 +42,9 @@ function marcar(input, aviso, mensaje) {
 
 // ---------- Resumen verde ----------
 function actualizarResumen() {
-  const h = horas.find((x) => (x.es_ahora ? "ahora" : x.hora_inicio) === selectorHora.value);
-  document.getElementById("resumen-inicio").textContent = h ? hora(h.hora_inicio) : "–";
-  document.getElementById("resumen-fin").textContent = h ? hora(h.hora_fin) : "–";
+  const v = selectorHora.value;
+  document.getElementById("resumen-inicio").textContent = v || "–";
+  document.getElementById("resumen-fin").textContent = sumarDosHoras(v);
 }
 
 // ---------- Integrantes ----------
@@ -118,13 +113,14 @@ document.getElementById("mas").addEventListener("click", () => {
   if (cantidad < MAXIMO) { cantidad++; actualizarCantidad(); }
 });
 selectorHora.addEventListener("change", actualizarResumen);
+selectorHora.addEventListener("input", actualizarResumen);
 
 // ---------- Validación en el navegador (el servidor la repite) ----------
 function validar() {
   const errores = [];
 
-  if (horas.length === 0) {
-    errores.push("No hay horas disponibles hoy para este cubículo.");
+  if (!inicioIso(selectorHora.value)) {
+    errores.push("Escribe la hora de inicio (por ejemplo 14:35).");
   }
   if (cantidad < cubiculo.capacidad_minima) {
     errores.push("El cubículo " + cubiculo.numero + " requiere al menos " + cubiculo.capacidad_minima +
@@ -180,7 +176,7 @@ document.getElementById("form-reserva").addEventListener("submit", async (evento
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id_cubiculo: cubiculo.id_cubiculo,
-        hora_inicio: selectorHora.value,   // "ahora" o una hora en formato ISO
+        hora_inicio: inicioIso(selectorHora.value),
         cantidad: cantidad,
         integrantes: otros.map((d) => ({ nombre: d.nombre.trim(), matricula: d.matricula.trim() })),
       }),
@@ -198,7 +194,7 @@ document.getElementById("form-reserva").addEventListener("submit", async (evento
   } catch (error) {
     mostrarErrores(["No pudimos conectar con el servidor. Intenta de nuevo."]);
   } finally {
-    botonConfirmar.disabled = horas.length === 0;
+    botonConfirmar.disabled = false;
     botonConfirmar.textContent = "Confirmar reserva";
   }
 });
@@ -222,20 +218,8 @@ async function iniciar() {
     document.getElementById("texto-minimo").textContent =
       "Este cubículo requiere mínimo " + cubiculo.capacidad_minima + " personas.";
 
-    const rHoras = await fetch("/api/cubiculos/" + cubiculo.id_cubiculo + "/horas");
-    horas = rHoras.ok ? await rHoras.json() : [];
-
-    for (const h of horas) {
-      const opcion = document.createElement("option");
-      opcion.value = h.es_ahora ? "ahora" : h.hora_inicio;
-      opcion.textContent = h.etiqueta + "  –  termina " + hora(h.hora_fin);
-      selectorHora.appendChild(opcion);
-    }
-    if (horas.length === 0) {
-      selectorHora.disabled = true;
-      botonConfirmar.disabled = true;
-      document.getElementById("sin-horas").classList.remove("d-none");
-    }
+    selectorHora.value = horaActualTexto();
+    cargarOcupadas(cubiculo.id_cubiculo, document.getElementById("ocupadas"));
 
     cantidad = cubiculo.capacidad_minima;   // empieza en el mínimo permitido
     actualizarResumen();
