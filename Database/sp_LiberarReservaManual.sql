@@ -24,7 +24,8 @@ BEGIN
     -- La condicion estado = 'activa' evita liberar dos veces si dos personas pulsan a la vez.
     UPDATE RESERVA
     SET estado = 'finalizada',
-        hora_fin = CASE WHEN GETDATE() < hora_fin THEN GETDATE() ELSE hora_fin END
+                hora_fin = CASE WHEN GETDATE() > hora_inicio AND GETDATE() < hora_fin
+                        THEN GETDATE() ELSE hora_fin END
     WHERE id_reserva = @id_reserva AND estado = 'activa';
 
     IF @@ROWCOUNT = 0

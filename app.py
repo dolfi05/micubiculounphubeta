@@ -401,6 +401,40 @@ def mi_reserva():
         "integrantes": detalle["integrantes"],
     }}), 200
 
+@app.route("/api/mi-reserva/cancelar", methods=["POST"])
+@estudiante_requerido
+def cancelar_mi_reserva():
+    datos = request.get_json(silent=True) or {}
+    try:
+        id_reserva = int(datos.get("id_reserva"))
+    except (TypeError, ValueError):
+        return jsonify({"error": "Falta indicar la reserva."}), 400
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        # La matricula sale de la sesion, nunca de lo que envie el navegador
+        cursor.execute(
+            "EXEC sp_CancelarReserva @id_reserva = ?, @matricula = ?",
+            (id_reserva, session["estudiante"]["matricula"]),
+        )
+        fila = cursor.fetchone()
+        conn.commit()
+        return jsonify({"mensaje": "Reserva cancelada.",
+                        "numero_cubiculo": fila.numero_cubiculo}), 200
+    except pyodbc.Error as error:
+        conn.rollback()
+        codigo = codigo_error_sql(error)
+        if codigo == 50020:
+            return jsonify({"error": limpiar_error_sql(error)}), 404
+        if codigo == 50021:
+            return jsonify({"error": limpiar_error_sql(error)}), 409
+        if codigo == 50022:
+            return jsonify({"error": limpiar_error_sql(error)}), 403
+        raise
+    finally:
+        conn.close()
+
 
 # ------------------------------------------------------------------
 # Parte 6B: panel del personal (todas protegidas)
