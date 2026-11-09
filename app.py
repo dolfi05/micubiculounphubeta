@@ -32,7 +32,7 @@ MATRICULA_VALIDA = re.compile(r"^\d{2}-\d{4}$")  # formato 24-0302
 def limpiar_error_sql(error):
     """Deja solo el mensaje que escribimos en el THROW de SQL Server."""
     texto = str(error.args[1]) if len(error.args) > 1 else str(error)
-    texto = re.sub(r"^(\[[^\]]*\]\s*)+", "", texto)                 # quita [42000] [Microsoft]...
+    texto = re.sub(r"^(\[[^\]]*\]\s*)+", "", texto)                       # quita [42000] [Microsoft]...
     texto = re.sub(r"\s*\(\d+\)(\s*\(SQLExecDirectW\))?\s*$", "", texto)  # quita (50010) (SQLExecDirectW)
     return texto.strip()
 
@@ -76,6 +76,7 @@ def estudiante_requerido(f):
         return f(*args, **kwargs)
     return envoltura
 
+
 def usuario_requerido(f):
     """Deja pasar a un estudiante que ingreso o a personal con sesion."""
     @wraps(f)
@@ -84,6 +85,7 @@ def usuario_requerido(f):
             return jsonify({"error": "Debes ingresar primero."}), 401
         return f(*args, **kwargs)
     return envoltura
+
 
 @app.errorhandler(pyodbc.Error)
 def error_de_base_de_datos(error):
@@ -96,7 +98,7 @@ def error_de_base_de_datos(error):
 # ------------------------------------------------------------------
 @app.route("/api/sesion", methods=["GET"])
 def ver_sesion():
-    """Dice quien tiene la sesion abierta (lo usara el frontend)."""
+    """Dice quien tiene la sesion abierta (lo usa el frontend)."""
     if "personal" in session:
         return jsonify({"rol": "personal", **session["personal"]}), 200
     if "estudiante" in session:
@@ -155,8 +157,9 @@ def logout():
     session.clear()
     return jsonify({"mensaje": "Sesion cerrada."}), 200
 
+
 # ------------------------------------------------------------------
-# Parte 6B: utilidades
+# Utilidades de reservas
 # ------------------------------------------------------------------
 def iso(valor):
     """Convierte una fecha a texto como 2026-11-09T10:00:00 (o None)."""
@@ -182,13 +185,12 @@ def leer_datos_reserva(datos):
         raise ValueError("Falta elegir el cubiculo.")
 
     valor_hora = datos.get("hora_inicio")
-    if valor_hora in (None, "", "ahora"):
-        hora_inicio = None  # None significa "Ahora"
-    else:
-        try:
-            hora_inicio = datetime.fromisoformat(str(valor_hora))
-        except ValueError:
-            raise ValueError("La hora de inicio no tiene un formato valido.")
+    if not valor_hora:
+        raise ValueError("Escribe la hora de inicio.")
+    try:
+        hora_inicio = datetime.fromisoformat(str(valor_hora))
+    except ValueError:
+        raise ValueError("La hora de inicio no tiene un formato valido.")
 
     lista = datos.get("integrantes")
     if not isinstance(lista, list):
@@ -293,7 +295,7 @@ def detalle_de_reserva(id_reserva):
 
 
 # ------------------------------------------------------------------
-# Parte 6B: disponibilidad (estudiante y personal)
+# Disponibilidad (estudiante y personal)
 # ------------------------------------------------------------------
 @app.route("/api/cubiculos", methods=["GET"])
 @usuario_requerido
@@ -313,24 +315,6 @@ def obtener_disponibilidad():
     return jsonify(cubiculos), 200
 
 
-@app.route("/api/cubiculos/<int:id_cubiculo>/horas", methods=["GET"])
-@usuario_requerido
-def horas_disponibles(id_cubiculo):
-    try:
-        filas = consultar("EXEC sp_HorasDisponibles @id_cubiculo = ?", (id_cubiculo,))
-    except pyodbc.Error as error:
-        if codigo_error_sql(error) == 50030:
-            return jsonify({"error": limpiar_error_sql(error)}), 404
-        raise
-    horas = [{
-        "es_ahora": bool(f.es_ahora),
-        "hora_inicio": iso(f.hora_inicio),
-        "hora_fin": iso(f.hora_fin),
-        "etiqueta": ("Ahora (" + f.hora_inicio.strftime("%H:%M") + ")") if f.es_ahora
-                    else f.hora_inicio.strftime("%H:%M"),
-    } for f in filas]
-    return jsonify(horas), 200
-
 @app.route("/api/cubiculos/<int:id_cubiculo>/ocupadas", methods=["GET"])
 @usuario_requerido
 def horas_ocupadas(id_cubiculo):
@@ -346,7 +330,7 @@ def horas_ocupadas(id_cubiculo):
 
 
 # ------------------------------------------------------------------
-# Parte 6B: reservas del estudiante
+# Reservas del estudiante
 # ------------------------------------------------------------------
 @app.route("/api/reservas", methods=["POST"])
 @estudiante_requerido
@@ -401,6 +385,7 @@ def mi_reserva():
         "integrantes": detalle["integrantes"],
     }}), 200
 
+
 @app.route("/api/mi-reserva/cancelar", methods=["POST"])
 @estudiante_requerido
 def cancelar_mi_reserva():
@@ -437,7 +422,7 @@ def cancelar_mi_reserva():
 
 
 # ------------------------------------------------------------------
-# Parte 6B: panel del personal (todas protegidas)
+# Panel del personal (todas protegidas)
 # ------------------------------------------------------------------
 @app.route("/api/panel", methods=["GET"])
 @personal_requerido
@@ -525,6 +510,7 @@ def liberar_reserva(id_reserva):
     finally:
         conn.close()
 
+
 # ------------------------------------------------------------------
 # Paginas (HTML)
 # ------------------------------------------------------------------
@@ -532,9 +518,11 @@ def liberar_reserva(id_reserva):
 def pagina_ingreso():
     return render_template("ingreso.html")
 
+
 @app.route("/disponibilidad")
 def pagina_disponibilidad():
     return render_template("disponibilidad.html", seccion="disponibilidad")
+
 
 @app.route("/reservar/<int:numero>")
 def pagina_reservar(numero):
@@ -550,9 +538,11 @@ def pagina_reserva_confirmada():
 def pagina_reserva_conflicto():
     return render_template("conflicto.html", seccion="disponibilidad")
 
+
 @app.route("/mi-reserva")
 def pagina_mi_reserva():
     return render_template("mi_reserva.html", seccion="reserva")
+
 
 @app.route("/personal")
 def pagina_login_personal():
@@ -563,9 +553,11 @@ def pagina_login_personal():
 def pagina_panel():
     return render_template("panel.html", seccion="panel")
 
+
 @app.route("/registro-presencial")
 def pagina_registro_presencial():
     return render_template("registro_presencial.html", seccion="registro")
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
