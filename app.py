@@ -331,6 +331,19 @@ def horas_disponibles(id_cubiculo):
     } for f in filas]
     return jsonify(horas), 200
 
+@app.route("/api/cubiculos/<int:id_cubiculo>/ocupadas", methods=["GET"])
+@usuario_requerido
+def horas_ocupadas(id_cubiculo):
+    try:
+        filas = consultar("EXEC sp_HorasOcupadas @id_cubiculo = ?", (id_cubiculo,))
+    except pyodbc.Error as error:
+        if codigo_error_sql(error) == 50030:
+            return jsonify({"error": limpiar_error_sql(error)}), 404
+        raise
+    return jsonify([
+        {"hora_inicio": iso(f.hora_inicio), "hora_fin": iso(f.hora_fin)} for f in filas
+    ]), 200
+
 
 # ------------------------------------------------------------------
 # Parte 6B: reservas del estudiante
