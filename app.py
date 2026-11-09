@@ -489,5 +489,19 @@ def pagina_ingreso():
 def pagina_disponibilidad():
     return render_template("disponibilidad.html", seccion="disponibilidad")
 
+@app.route("/reservar/<int:numero>")
+def pagina_reservar(numero):
+    return render_template("reservar.html", seccion="disponibilidad", numero=numero)
+
+
+@app.route("/reserva-confirmada")
+def pagina_reserva_confirmada():
+    return render_template("confirmada.html", seccion="reserva")
+
+
+@app.route("/reserva-conflicto")
+def pagina_reserva_conflicto():
+    return render_template("conflicto.html", seccion="disponibilidad")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

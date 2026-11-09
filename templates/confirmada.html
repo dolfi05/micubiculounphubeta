@@ -1,0 +1,44 @@
+{% extends "base_estudiante.html" %}
+
+{% block titulo %}Reserva confirmada{% endblock %}
+
+{% block pagina %}
+<div class="columna-central text-center">
+  <div class="icono-circulo icono-ok">
+    <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#fff" stroke-width="3"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+  </div>
+  <h1 class="titulo-pagina mt-3">Reserva confirmada</h1>
+  <p class="text-secondary mb-4" id="texto-confirmacion">Cargando tu reserva...</p>
+
+  <div class="tarjeta-confirmacion text-start d-none" id="tarjeta">
+    <div class="confirmacion-cabecera">
+      <div class="d-flex align-items-baseline gap-3">
+        <span class="resumen-numero" id="c-numero"></span>
+        <span id="c-tipo"></span>
+      </div>
+      <div class="d-flex gap-4">
+        <div><small>Inicio</small><div class="confirmacion-hora" id="c-inicio"></div></div>
+        <div><small>Termina</small><div class="confirmacion-hora" id="c-fin"></div></div>
+      </div>
+    </div>
+    <div class="p-4">
+      <h2 class="h6 mb-3" id="c-titulo-integrantes"></h2>
+      <ul class="lista-integrantes" id="c-integrantes"></ul>
+    </div>
+  </div>
+
+  <div class="aviso-reloj text-start d-none" id="c-aviso">
+    Te avisaremos 10 minutos antes de que termine tu bloque. Al vencer, el cubículo se libera solo.
+  </div>
+
+  <div class="d-flex justify-content-center gap-2 mt-4">
+    <a href="/mi-reserva" class="btn btn-verde">Ver mi reserva</a>
+    <a href="/disponibilidad" class="btn btn-salir">Volver a disponibilidad</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_pagina %}
+<script src="{{ url_for('static', filename='js/confirmada.js') }}"></script>
+{% endblock %}

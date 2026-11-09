@@ -1,0 +1,30 @@
+{% extends "base_estudiante.html" %}
+
+{% block titulo %}Cubículo ya reservado{% endblock %}
+
+{% block pagina %}
+<div class="columna-central">
+  <div class="caja-error mb-4" role="alert">
+    <strong>Este cubículo ya fue reservado</strong>
+    <p class="mb-0 mt-1" id="k-mensaje"></p>
+  </div>
+
+  <div class="tarjeta-form">
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <span class="cubiculo-numero n-gris" id="k-numero"></span>
+      <span class="etiqueta e-ocupado" id="k-estado"></span>
+    </div>
+    <hr class="separador">
+    <h2 class="h5 mb-3">Cubículos libres ahora</h2>
+    <div class="d-flex flex-wrap gap-2" id="k-libres"></div>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="/disponibilidad" class="btn btn-verde">Ver disponibilidad actualizada</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts_pagina %}
+<script src="{{ url_for('static', filename='js/conflicto.js') }}"></script>
+{% endblock %}
