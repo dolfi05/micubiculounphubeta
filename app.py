@@ -507,5 +507,14 @@ def pagina_reserva_conflicto():
 def pagina_mi_reserva():
     return render_template("mi_reserva.html", seccion="reserva")
 
+@app.route("/personal")
+def pagina_login_personal():
+    return render_template("personal_login.html")
+
+
+@app.route("/panel")
+def pagina_panel():
+    return render_template("panel.html", seccion="panel")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

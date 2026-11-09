@@ -600,3 +600,130 @@ h1, h2, h3, h4, h5, .fuente-titulo {
   font-size: 1.4rem;
   font-weight: 700;
 }
+
+/* ---------- Login del personal ---------- */
+.panel-oscuro { background: var(--verde-oscuro); }
+
+.insignia-acceso {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+/* ---------- Barra del personal ---------- */
+.barra-personal { background: var(--verde-oscuro); border-bottom: 0; }
+.barra-personal .marca-barra { color: #fff; }
+.barra-personal .enlace-barra { color: rgba(255, 255, 255, 0.8); }
+.barra-personal .enlace-barra.activo { background: rgba(255, 255, 255, 0.16); color: #fff; }
+.barra-personal .usuario-barra { color: #fff; }
+
+.marca-icono-blanco { background: #fff; }
+.marca-icono-blanco svg { stroke: #1B7A3F; }
+
+.insignia-personal {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  font-family: "Work Sans", sans-serif;
+  font-weight: 600;
+}
+
+.btn-salir-claro {
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.btn-salir-claro:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+
+/* ---------- Panel de ocupación ---------- */
+.contador-ancho { display: block; }
+.texto-ambar { color: #8A6400 !important; }
+
+.tarjeta-tabla {
+  background: #fff;
+  border: 1px solid #E6E2D6;
+  border-radius: 20px;
+  padding: 8px 12px;
+}
+
+.tabla-panel th {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+  font-weight: 500;
+  border-bottom: 1px solid #E6E2D6;
+  padding: 14px 12px;
+}
+
+.tabla-panel td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #EFECE2;
+  background: transparent;
+}
+
+.tabla-panel tbody tr:last-child td { border-bottom: 0; }
+
+.numero-fila {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.btn-accion {
+  border-radius: 10px;
+  padding: 6px 16px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  background: #fff;
+}
+
+.btn-accion-verde { border: 1px solid var(--verde); color: var(--verde-oscuro); }
+.btn-accion-rojo { border: 1px solid #C0443F; color: #A8403C; }
+
+/* ---------- Ventana Ver / liberar ---------- */
+.modal-redondo { border-radius: 24px; border: 0; }
+
+.btn-cerrar {
+  border: 0;
+  background: var(--fondo);
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.fila-dato {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  color: var(--texto-suave);
+}
+
+.fila-dato strong { color: var(--texto); text-align: right; }
+
+.caja-matriculas {
+  background: var(--fondo);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 8px;
+}
+
+.btn-rojo {
+  background: #A8403C;
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 20px;
+  font-weight: 600;
+}
+
+.btn-rojo:hover { background: #8E2A26; color: #fff; }
+.btn-rojo:disabled { background: #A8403C; opacity: 0.65; color: #fff; }
