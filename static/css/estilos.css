@@ -547,3 +547,56 @@ h1, h2, h3, h4, h5, .fuente-titulo {
 }
 
 .chip-cubiculo:hover { background: #E3F1E8; }
+
+/* ---------- Mi reserva ---------- */
+.columna-ancha { max-width: 760px; margin: 0 auto; }
+
+.aviso-amarillo {
+  background: #FAF0D0;
+  border: 1px solid #C9A227;
+  color: #5E4400;
+  border-radius: 18px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+}
+
+.icono-gris { background: #ECE8DC; }
+
+.etiqueta-mayus {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.reloj {
+  font-family: "Sora", sans-serif;
+  font-size: clamp(3rem, 12vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--verde-oscuro);
+}
+
+.reloj.reloj-rojo { color: #A8403C; }
+
+.barra-progreso {
+  height: 10px;
+  background: var(--fondo);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.barra-relleno {
+  height: 100%;
+  background: var(--verde);
+  transition: width 1s linear;
+}
+
+.barra-relleno.barra-roja { background: #C0443F; }
+
+.dato-grande {
+  font-family: "Sora", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+}

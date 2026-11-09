@@ -503,5 +503,9 @@ def pagina_reserva_confirmada():
 def pagina_reserva_conflicto():
     return render_template("conflicto.html", seccion="disponibilidad")
 
+@app.route("/mi-reserva")
+def pagina_mi_reserva():
+    return render_template("mi_reserva.html", seccion="reserva")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
