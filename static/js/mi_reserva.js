@@ -129,20 +129,26 @@ async function cargar() {
 }
 
 // ---------- Cancelar reserva (solo el responsable) ----------
-$("boton-cancelar").addEventListener("click", async () => {
+const modalCancelar = new bootstrap.Modal($("modal-cancelar"));
+
+// Al pulsar "Cancelar reserva" solo se abre la ventana de confirmación
+$("boton-cancelar").addEventListener("click", () => {
   if (!reserva) return;
-
-  // Comparamos con la hora local del navegador (new Date() sin zona interpreta el texto como local)
   const aunNoEmpieza = new Date(reserva.hora_inicio) > new Date();
-  const aviso = aunNoEmpieza
-    ? "¿Cancelar tu reserva del cubículo " + reserva.numero + "?"
-    : "¿Cancelar tu reserva? El cubículo " + reserva.numero + " se liberará ahora mismo.";
-  if (!window.confirm(aviso)) return;
+  $("texto-cancelar").textContent = aunNoEmpieza
+    ? "Se cancelará tu reserva del cubículo " + reserva.numero + " de " +
+      hora(reserva.hora_inicio) + " a " + hora(reserva.hora_fin) + "."
+    : "El cubículo " + reserva.numero + " se liberará ahora mismo y quedará disponible para otras personas.";
+  modalCancelar.show();
+});
 
-  const boton = $("boton-cancelar");
+// Al confirmar en la ventana se cancela de verdad
+$("confirmar-cancelar").addEventListener("click", async () => {
+  if (!reserva) return;
+  const confirmar = $("confirmar-cancelar");
   const cajaError = $("cancelar-error");
-  boton.disabled = true;
-  boton.textContent = "Cancelando...";
+  confirmar.disabled = true;
+  confirmar.textContent = "Cancelando...";
   cajaError.classList.add("d-none");
   try {
     const respuesta = await fetch("/api/mi-reserva/cancelar", {
@@ -152,6 +158,7 @@ $("boton-cancelar").addEventListener("click", async () => {
     });
     if (respuesta.status === 401) { window.location.href = "/"; return; }
     const datos = await respuesta.json().catch(() => ({}));
+    modalCancelar.hide();
     if (!respuesta.ok) {
       cajaError.textContent = datos.error || "No se pudo cancelar la reserva.";
       cajaError.classList.remove("d-none");
@@ -159,11 +166,12 @@ $("boton-cancelar").addEventListener("click", async () => {
     }
     await cargar();   // muestra "Tu bloque terminó"
   } catch (error) {
+    modalCancelar.hide();
     cajaError.textContent = "No pudimos conectar con el servidor.";
     cajaError.classList.remove("d-none");
   } finally {
-    boton.disabled = false;
-    boton.textContent = "Cancelar reserva";
+    confirmar.disabled = false;
+    confirmar.textContent = "Sí, cancelar reserva";
   }
 });
 
