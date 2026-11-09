@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<nav class="barra-superior">
+  <div class="contenedor-barra">
+    <a class="marca-barra" href="/disponibilidad">
+      <span class="marca-icono-chico">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1B7A3F"
+             stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 4v8a6 6 0 0 0 12 0V4"/>
+          <path d="M9 11l2.2 2.2L15 9.5"/>
+        </svg>
+      </span>
+      <span class="fuente-titulo">MiCubículo</span>
+    </a>
+
+    <div class="enlaces-barra">
+      <a href="/disponibilidad" class="enlace-barra {% if seccion == 'disponibilidad' %}activo{% endif %}">Disponibilidad</a>
+      <a href="/mi-reserva" class="enlace-barra {% if seccion == 'reserva' %}activo{% endif %}">Mi reserva</a>
+    </div>
+
+    <div class="usuario-barra">
+      <div class="text-end lh-sm">
+        <div class="fw-semibold" id="usuario-nombre"></div>
+        <small class="text-secondary" id="usuario-matricula"></small>
+      </div>
+      <button type="button" class="btn btn-salir" id="boton-salir">Salir</button>
+    </div>
+  </div>
+</nav>
+
+<main class="contenedor-pagina">
+  {% block pagina %}{% endblock %}
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/estudiante.js') }}"></script>
+{% block scripts_pagina %}{% endblock %}
+{% endblock %}

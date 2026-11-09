@@ -1,0 +1,31 @@
+{% extends "base_estudiante.html" %}
+
+{% block titulo %}Disponibilidad{% endblock %}
+
+{% block pagina %}
+<div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+  <div>
+    <h1 class="titulo-pagina">Cubículos disponibles</h1>
+    <p class="text-secondary mb-0" id="subtitulo">Elige uno libre y reserva un bloque de 2 horas.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <div class="contador"><span class="contador-num texto-verde" id="cuenta-libres">–</span> libres</div>
+    <div class="contador"><span class="contador-num" id="cuenta-ocupados">–</span> ocupados</div>
+  </div>
+</div>
+
+<div class="leyenda mb-4">
+  <span><i class="punto p-disponible"></i> Disponible</span>
+  <span><i class="punto p-ocupado"></i> Ocupado</span>
+  <span><i class="punto p-por_vencer"></i> Por vencer (menos de 30 min)</span>
+  <span><i class="punto p-urgente"></i> Urgente (menos de 10 min)</span>
+</div>
+
+<div id="aviso-error" class="caja-error d-none" role="alert"></div>
+
+<div class="row g-3 row-cols-1 row-cols-sm-2 row-cols-lg-5" id="cuadricula"></div>
+{% endblock %}
+
+{% block scripts_pagina %}
+<script src="{{ url_for('static', filename='js/disponibilidad.js') }}"></script>
+{% endblock %}
