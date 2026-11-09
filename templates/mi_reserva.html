@@ -1,0 +1,80 @@
+{% extends "base_estudiante.html" %}
+
+{% block titulo %}Mi reserva{% endblock %}
+
+{% block pagina %}
+<div class="columna-ancha">
+
+  <div id="estado-cargando" class="text-center text-secondary">Cargando tu reserva...</div>
+
+  <!-- Aviso amarillo de 10 minutos -->
+  <div id="aviso-10" class="aviso-amarillo d-none" role="alert">
+    <div>
+      <strong class="fuente-titulo">Faltan 10 minutos</strong>
+      <p class="mb-0" id="aviso-10-texto"></p>
+    </div>
+  </div>
+
+  <!-- Sin reserva -->
+  <div id="vista-ninguna" class="text-center d-none">
+    <div class="icono-circulo icono-gris">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#4A4A40" stroke-width="2.2"
+           stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    </div>
+    <h1 class="titulo-pagina mt-3">No tienes una reserva hoy</h1>
+    <p class="text-secondary mb-4">Elige un cubículo libre y reserva un bloque de 2 horas.</p>
+    <a href="/disponibilidad" class="btn btn-verde">Ver disponibilidad</a>
+  </div>
+
+  <!-- Reserva activa o futura -->
+  <div id="vista-activa" class="d-none">
+    <div class="tarjeta-form text-center">
+      <div class="etiqueta-mayus" id="etiqueta-tiempo">TIEMPO RESTANTE</div>
+      <div class="reloj" id="reloj">--:--</div>
+      <div class="text-secondary" id="reloj-unidad">minutos : segundos</div>
+      <div class="barra-progreso"><div id="barra" class="barra-relleno"></div></div>
+
+      <div class="d-flex justify-content-center gap-5 text-start flex-wrap mt-3">
+        <div><small class="text-secondary">Cubículo</small><div class="dato-grande" id="d-numero"></div></div>
+        <div><small class="text-secondary">Horario</small><div class="dato-grande" id="d-horario"></div></div>
+        <div><small class="text-secondary">Integrantes</small><div class="dato-grande" id="d-cantidad"></div></div>
+      </div>
+    </div>
+
+    <p class="text-center text-secondary mt-3">
+      Al terminar, tu reserva pasa a "finalizada". Si aún necesitas estudiar, revisa si hay otro cubículo libre.
+    </p>
+    <div class="text-center d-none" id="boton-entendido-caja">
+      <button type="button" class="btn btn-verde" id="boton-entendido">Entendido</button>
+    </div>
+  </div>
+
+  <!-- Terminó -->
+  <div id="vista-termino" class="text-center d-none">
+    <div class="icono-circulo icono-gris">
+      <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#4A4A40" stroke-width="2.2"
+           stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+    </div>
+    <h1 class="titulo-pagina mt-3">Tu bloque terminó</h1>
+    <p class="text-secondary mb-4" id="termino-texto"></p>
+
+    <div class="tarjeta-form text-start">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="h5 mb-0" id="t-cubiculo"></h2>
+        <span class="etiqueta e-ocupado">Finalizada</span>
+      </div>
+      <hr class="separador">
+      <div class="d-flex gap-5 flex-wrap">
+        <div><small class="text-secondary">Horario</small><div class="dato-grande" id="t-horario"></div></div>
+        <div><small class="text-secondary">Integrantes</small><div class="dato-grande" id="t-cantidad"></div></div>
+      </div>
+    </div>
+    <a href="/disponibilidad" class="btn btn-verde mt-4">Hacer una nueva reserva</a>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts_pagina %}
+<script src="{{ url_for('static', filename='js/mi_reserva.js') }}"></script>
+{% endblock %}
