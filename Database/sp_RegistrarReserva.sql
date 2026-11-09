@@ -72,9 +72,8 @@ BEGIN
             INSERT INTO @errores (mensaje) VALUES
                                 (N'El bloque de 2 horas debe terminar antes del cierre. Ultimo inicio: 19:00 de lunes a viernes y 13:00 los sabados (la biblioteca abre a las 8:00 y cierra a las 21:00, sabados a las 15:00).');
 
-        IF @dia = @hoy AND @inicio < @ahora_min
-            INSERT INTO @errores (mensaje) VALUES (N'No se pueden reservar horas que ya pasaron.');
-
+                IF @dia = @hoy AND @inicio < DATEADD(MINUTE, -5, @ahora_min)
+            INSERT INTO @errores (mensaje) VALUES (N'Esa hora ya paso. Puedes empezar desde 5 minutos antes de la hora actual.');
         -- Integrantes
         IF @cantidad = 0
             INSERT INTO @errores (mensaje) VALUES (N'Debes indicar al menos un integrante.');
