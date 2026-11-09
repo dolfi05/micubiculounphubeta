@@ -25,34 +25,13 @@ function mostrar(vista) {
   for (const v of vistas) $(v).classList.toggle("d-none", v !== vista);
 }
 
-// ---------- Aviso de 10 minutos: una sola vez por reserva ----------
-function claveAviso() {
-  return "aviso10-" + reserva.id_reserva;
-}
-
-function yaAvisado() {
-  try { return localStorage.getItem(claveAviso()) === "1"; } catch (e) { return false; }
-}
-
-function marcarAvisado() {
-  try { localStorage.setItem(claveAviso(), "1"); } catch (e) { /* sin almacenamiento: se ignora */ }
-}
-
+// ---------- Reloj en rojo cuando faltan 10 minutos ----------
+// El aviso en sí lo muestra estudiante.js, en cualquier pantalla.
 function revisarAviso() {
   if (restante === null || restante <= 0 || restante > 600) return;
   $("reloj").classList.add("reloj-rojo");
   $("barra").classList.add("barra-roja");
-  $("boton-entendido-caja").classList.remove("d-none");
-  if (!yaAvisado()) {
-    $("aviso-10-texto").textContent =
-      "Tu bloque en el cubículo " + reserva.numero + " termina a las " + hora(reserva.hora_fin) +
-      ". Guarda tus cosas: el cubículo se liberará automáticamente.";
-    $("aviso-10").classList.remove("d-none");
-    marcarAvisado();   // ya se mostró: no vuelve a salir si recargas
-  }
 }
-
-$("boton-entendido").addEventListener("click", () => $("aviso-10").classList.add("d-none"));
 
 // ---------- Dibujo ----------
 function pintar() {
