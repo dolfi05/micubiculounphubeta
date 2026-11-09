@@ -741,3 +741,24 @@ h1, h2, h3, h4, h5, .fuente-titulo {
 
 /* ---------- Ventana de cancelar ---------- */
 .icono-alerta { background: #F7D9D7; }
+
+/* ---------- Aviso global de 10 minutos ---------- */
+.aviso-flotante {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(680px, calc(100% - 32px));
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: #FAF0D0;
+  border: 1px solid #C9A227;
+  color: #5E4400;
+  border-radius: 18px;
+  padding: 16px 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+}
