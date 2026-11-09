@@ -184,3 +184,185 @@ h1, h2, h3, h4, h5, .fuente-titulo {
   margin: 6px 0 0;
   padding-left: 18px;
 }
+
+/* ---------- Barra superior del estudiante ---------- */
+.barra-superior {
+  background: #fff;
+  border-bottom: 1px solid #E6E2D6;
+}
+
+.contenedor-barra {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.marca-barra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--verde-oscuro);
+  font-weight: 700;
+  font-size: 1.3rem;
+}
+
+.marca-icono-chico {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--verde);
+  display: grid;
+  place-items: center;
+}
+
+.marca-icono-chico svg { stroke: #fff; }
+
+.enlaces-barra { display: flex; gap: 6px; flex: 1; }
+
+.enlace-barra {
+  padding: 8px 16px;
+  border-radius: 10px;
+  color: var(--texto-suave);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.enlace-barra.activo {
+  background: #E3F1E8;
+  color: var(--verde-oscuro);
+  font-weight: 600;
+}
+
+.usuario-barra { display: flex; align-items: center; gap: 12px; }
+
+.btn-salir {
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px 16px;
+  font-weight: 500;
+}
+
+.contenedor-pagina {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+}
+
+.titulo-pagina {
+  color: var(--verde-oscuro);
+  font-weight: 700;
+  font-size: 2rem;
+}
+
+/* ---------- Contadores y leyenda ---------- */
+.contador {
+  background: #fff;
+  border: 1px solid #E6E2D6;
+  border-radius: 14px;
+  padding: 12px 18px;
+  color: var(--texto-suave);
+}
+
+.contador-num {
+  font-family: "Sora", sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--texto);
+  margin-right: 4px;
+}
+
+.texto-verde { color: var(--verde) !important; }
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+.punto {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.p-disponible { background: var(--verde); }
+.p-ocupado { background: #6B6B5F; }
+.p-por_vencer { background: #B8860B; }
+.p-urgente { background: #C0443F; }
+
+/* ---------- Tarjetas de cubículo ---------- */
+.cubiculo {
+  background: #fff;
+  border: 1px solid var(--verde);
+  border-radius: 20px;
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cubiculo.n-ocupado { background: #F8F6F0; border-color: #E6E2D6; }
+.cubiculo.n-por_vencer { background: #FBF6E6; border-color: #C9A227; }
+.cubiculo.n-urgente { background: #FAF3F1; border-color: #C0443F; }
+
+.cubiculo-numero {
+  font-family: "Sora", sans-serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--verde-oscuro);
+}
+
+.cubiculo.n-ocupado .cubiculo-numero,
+.cubiculo.n-por_vencer .cubiculo-numero,
+.cubiculo.n-urgente .cubiculo-numero { color: #6B6B5F; }
+
+.cubiculo-detalle {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  margin: 0 0 auto;
+}
+
+.etiqueta {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.e-disponible { background: #E3F1E8; color: var(--verde-oscuro); }
+.e-ocupado { background: #ECE8DC; color: #4A4A40; }
+.e-por_vencer { background: #F8EBC0; color: #6B4E00; }
+.e-urgente { background: #F7D9D7; color: #8E2A26; }
+
+.insignia-grupos {
+  background: var(--verde-oscuro);
+  color: #fff;
+  border-radius: 8px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.btn-no-disponible {
+  background: #ECE8DC;
+  color: #5F6660;
+  border: 0;
+  border-radius: 12px;
+  padding: 13px 20px;
+  font-weight: 600;
+}

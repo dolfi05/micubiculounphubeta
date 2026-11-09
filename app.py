@@ -485,5 +485,9 @@ def liberar_reserva(id_reserva):
 def pagina_ingreso():
     return render_template("ingreso.html")
 
+@app.route("/disponibilidad")
+def pagina_disponibilidad():
+    return render_template("disponibilidad.html", seccion="disponibilidad")
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
