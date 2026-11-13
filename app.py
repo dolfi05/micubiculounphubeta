@@ -1,5 +1,8 @@
+import hashlib
+import hmac
 import json
 import os
+import secrets
 import re
 import time
 import threading
@@ -9,9 +12,10 @@ from functools import wraps
 import pyodbc
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request, session
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from db import get_connection
+from correo import ErrorCorreo, enviar_codigo
 
 load_dotenv()
 
@@ -524,6 +528,232 @@ def finalizar_vencidas_periodicamente(intervalo=30):
         except Exception:
             app.logger.exception("No se pudieron finalizar las reservas vencidas")
         time.sleep(intervalo)
+
+# ------------------------------------------------------------------
+# Cuentas de estudiantes: registro, login y recuperacion
+# ------------------------------------------------------------------
+# Correo como da20-0099@unphu.edu.do: el grupo capturado es la matricula
+CORREO_INSTITUCIONAL = re.compile(r"^[a-z]+(\d{2}-\d{4})@unphu\.edu\.do$")
+HASH_FALSO = generate_password_hash("contrasena-falsa-para-igualar-tiempos")
+MENSAJES_CODIGO = {
+    "invalido": ("El codigo no es correcto.", 400),
+    "vencido": ("El codigo vencio. Pide uno nuevo.", 400),
+    "bloqueado": ("Demasiados intentos. Pide un codigo nuevo.", 429),
+}
+
+
+def datos_json():
+    return request.get_json(silent=True) or {}
+
+
+def hash_codigo(correo, proposito, codigo):
+    """El codigo nunca se guarda: solo este hash, firmado con la SECRET_KEY."""
+    mensaje = f"{correo}|{proposito}|{codigo}".encode()
+    return hmac.new(app.secret_key.encode(), mensaje, hashlib.sha256).hexdigest()
+
+
+def validar_contrasena(contrasena, repetir):
+    if len(contrasena) < 8:
+        return "La contrasena debe tener al menos 8 caracteres."
+    if len(contrasena) > 128:
+        return "La contrasena es demasiado larga."
+    if not re.search(r"[A-Za-z]", contrasena) or not re.search(r"\d", contrasena):
+        return "La contrasena debe tener letras y numeros."
+    if contrasena != repetir:
+        return "Las contrasenas no coinciden."
+    return None
+
+
+def validar_datos_registro(nombre, matricula, correo):
+    errores = []
+    if not nombre:
+        errores.append("Escribe tu nombre completo.")
+    elif len(nombre) > 100:
+        errores.append("El nombre es demasiado largo (maximo 100 caracteres).")
+    if not MATRICULA_VALIDA.match(matricula):
+        errores.append("La matricula no es valida. Usa el formato 24-0302.")
+    coincide = CORREO_INSTITUCIONAL.match(correo)
+    if not coincide:
+        errores.append("Usa tu correo institucional, por ejemplo da20-0099@unphu.edu.do.")
+    elif coincide.group(1) != matricula:
+        errores.append("La matricula del correo no coincide con la matricula que escribiste.")
+    return errores
+
+
+def enviar_nuevo_codigo(correo, proposito):
+    codigo = f"{secrets.randbelow(1_000_000):06d}"
+    consultar(
+        "EXEC sp_SolicitarCodigo @correo = ?, @proposito = ?, @codigo_hash = ?",
+        (correo, proposito, hash_codigo(correo, proposito, codigo)),
+    )
+    enviar_codigo(correo, codigo, proposito)
+
+
+def revisar_codigo(correo, proposito, codigo):
+    """Devuelve None si el codigo es correcto, o una respuesta de error lista para enviar."""
+    if not re.fullmatch(r"\d{6}", codigo or ""):
+        return jsonify({"error": "El codigo tiene 6 digitos."}), 400
+    filas = consultar(
+        "EXEC sp_VerificarCodigo @correo = ?, @proposito = ?, @codigo_hash = ?",
+        (correo, proposito, hash_codigo(correo, proposito, codigo)),
+    )
+    estado = filas[0].estado
+    if estado == "ok":
+        return None
+    mensaje, http = MENSAJES_CODIGO.get(estado, MENSAJES_CODIGO["invalido"])
+    return jsonify({"error": mensaje}), http
+
+
+def error_de_cuentas(error):
+    estados = {50040: 429, 50041: 400, 50043: 409, 50044: 409, 50045: 404}
+    codigo = codigo_error_sql(error)
+    if codigo in estados:
+        return jsonify({"error": limpiar_error_sql(error)}), estados[codigo]
+    raise error
+
+
+def error_de_correo(error):
+    app.logger.error("No se pudo enviar el correo: %s", error)
+    return jsonify({"error": "No pudimos enviar el correo. Intenta de nuevo en un momento."}), 502
+
+
+# ---------- Registro ----------
+@app.route("/api/registro/solicitar", methods=["POST"])
+def registro_solicitar():
+    d = datos_json()
+    nombre = (d.get("nombre") or "").strip()
+    matricula = (d.get("matricula") or "").strip()
+    correo = (d.get("correo") or "").strip().lower()
+
+    errores = validar_datos_registro(nombre, matricula, correo)
+    if errores:
+        return jsonify({"error": " | ".join(errores), "errores": errores}), 400
+    try:
+        consultar("EXEC sp_ComprobarRegistro @matricula = ?, @correo = ?", (matricula, correo))
+        enviar_nuevo_codigo(correo, "registro")
+    except pyodbc.Error as error:
+        return error_de_cuentas(error)
+    except ErrorCorreo as error:
+        return error_de_correo(error)
+    return jsonify({"mensaje": "Te enviamos un codigo de 6 digitos a " + correo}), 200
+
+
+@app.route("/api/registro/verificar", methods=["POST"])
+def registro_verificar():
+    d = datos_json()
+    correo = (d.get("correo") or "").strip().lower()
+    rechazo = revisar_codigo(correo, "registro", (d.get("codigo") or "").strip())
+    if rechazo:
+        return rechazo
+    return jsonify({"mensaje": "Codigo correcto."}), 200
+
+
+@app.route("/api/registro/completar", methods=["POST"])
+def registro_completar():
+    d = datos_json()
+    nombre = (d.get("nombre") or "").strip()
+    matricula = (d.get("matricula") or "").strip()
+    correo = (d.get("correo") or "").strip().lower()
+    codigo = (d.get("codigo") or "").strip()
+    contrasena = d.get("contrasena") or ""
+
+    errores = validar_datos_registro(nombre, matricula, correo)
+    problema = validar_contrasena(contrasena, d.get("repetir") or "")
+    if problema:
+        errores.append(problema)
+    if errores:
+        return jsonify({"error": " | ".join(errores), "errores": errores}), 400
+
+    rechazo = revisar_codigo(correo, "registro", codigo)   # cuenta los intentos fallidos
+    if rechazo:
+        return rechazo
+    try:
+        filas = consultar(
+            "EXEC sp_CrearCuenta @nombre = ?, @matricula = ?, @correo = ?, "
+            "@contrasena_hash = ?, @codigo_hash = ?",
+            (nombre, matricula, correo, generate_password_hash(contrasena),
+             hash_codigo(correo, "registro", codigo)),
+        )
+    except pyodbc.Error as error:
+        return error_de_cuentas(error)
+
+    cuenta = filas[0]
+    session.clear()
+    session["estudiante"] = {"nombre": cuenta.nombre, "matricula": cuenta.matricula}
+    return jsonify(session["estudiante"]), 201
+
+
+# ---------- Login del estudiante ----------
+@app.route("/api/login-estudiante", methods=["POST"])
+def login_estudiante():
+    d = datos_json()
+    identificador = (d.get("identificador") or "").strip().lower()
+    contrasena = d.get("contrasena") or ""
+    if not identificador or not contrasena:
+        return jsonify({"error": "Escribe tu matricula o correo y tu contrasena."}), 400
+
+    filas = consultar("EXEC sp_ObtenerCuenta @identificador = ?", (identificador,))
+    cuenta = filas[0] if filas else None
+    # Se compara siempre contra algun hash para que no se note si la cuenta existe
+    correcta = check_password_hash(cuenta.contrasena_hash if cuenta else HASH_FALSO, contrasena)
+    if cuenta is None or not correcta:
+        return jsonify({"error": "La matricula, el correo o la contrasena no son correctos."}), 401
+
+    session.clear()
+    session["estudiante"] = {"nombre": cuenta.nombre, "matricula": cuenta.matricula}
+    return jsonify(session["estudiante"]), 200
+
+
+# ---------- Recuperar contrasena ----------
+@app.route("/api/recuperar/solicitar", methods=["POST"])
+def recuperar_solicitar():
+    correo = (datos_json().get("correo") or "").strip().lower()
+    if not CORREO_INSTITUCIONAL.match(correo):
+        return jsonify({"error": "Escribe tu correo institucional."}), 400
+    try:
+        if consultar("EXEC sp_ObtenerCuenta @identificador = ?", (correo,)):
+            enviar_nuevo_codigo(correo, "recuperacion")
+    except pyodbc.Error as error:
+        if codigo_error_sql(error) != 50040:   # el limite de pedidos no revela si hay cuenta
+            raise
+    except ErrorCorreo as error:
+        return error_de_correo(error)
+    # Misma respuesta exista o no la cuenta
+    return jsonify({"mensaje": "Si el correo tiene una cuenta, te enviamos un codigo de 6 digitos."}), 200
+
+
+@app.route("/api/recuperar/verificar", methods=["POST"])
+def recuperar_verificar():
+    d = datos_json()
+    correo = (d.get("correo") or "").strip().lower()
+    rechazo = revisar_codigo(correo, "recuperacion", (d.get("codigo") or "").strip())
+    if rechazo:
+        return rechazo
+    return jsonify({"mensaje": "Codigo correcto."}), 200
+
+
+@app.route("/api/recuperar/cambiar", methods=["POST"])
+def recuperar_cambiar():
+    d = datos_json()
+    correo = (d.get("correo") or "").strip().lower()
+    codigo = (d.get("codigo") or "").strip()
+    contrasena = d.get("contrasena") or ""
+
+    problema = validar_contrasena(contrasena, d.get("repetir") or "")
+    if problema:
+        return jsonify({"error": problema, "errores": [problema]}), 400
+    rechazo = revisar_codigo(correo, "recuperacion", codigo)
+    if rechazo:
+        return rechazo
+    try:
+        consultar(
+            "EXEC sp_CambiarContrasena @correo = ?, @contrasena_hash = ?, @codigo_hash = ?",
+            (correo, generate_password_hash(contrasena), hash_codigo(correo, "recuperacion", codigo)),
+        )
+    except pyodbc.Error as error:
+        return error_de_cuentas(error)
+    session.clear()
+    return jsonify({"mensaje": "Contrasena actualizada. Ya puedes iniciar sesion."}), 200
 
 
 # ------------------------------------------------------------------
