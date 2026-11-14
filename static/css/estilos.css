@@ -912,3 +912,17 @@ h1, h2, h3, h4, h5, .fuente-titulo {
 }
 
 .reloj-chico.reloj-rojo { color: #A8403C; }
+
+
+/* ---------- Reservas dentro de la ventana del panel ---------- */
+.reserva-panel {
+  border: 1px solid #E6E2D6;
+  border-radius: 16px;
+  padding: 16px 18px;
+  background: #fff;
+}
+
+.reserva-en_curso { border-color: var(--verde); background: #F4FAF6; }
+.reserva-finalizada { background: #FBFAF6; opacity: 0.85; }
+
+.reserva-panel summary { cursor: pointer; color: var(--verde-oscuro); }

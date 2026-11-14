@@ -467,7 +467,7 @@ def panel_ocupacion():
         "hora_inicio": iso(f.hora_inicio),
         "hora_fin": iso(f.hora_fin),
         "segundos_restantes": f.segundos_restantes,
-        "proxima_reserva": iso(f.proxima_reserva),
+        "pendientes": f.pendientes,
     } for f in filas]
     resumen = {
         "libres": sum(1 for c in cubiculos if c["estado"] == "disponible"),
@@ -476,7 +476,43 @@ def panel_ocupacion():
     }
     return jsonify({"resumen": resumen, "cubiculos": cubiculos}), 200
 
+@app.route("/api/cubiculos/<int:id_cubiculo>/reservas", methods=["GET"])
+@personal_requerido
+def reservas_de_cubiculo(id_cubiculo):
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("EXEC sp_ReservasDeCubiculo @id_cubiculo = ?", (id_cubiculo,))
+        filas = cursor.fetchall()
+        cursor.nextset()   # pasa al segundo resultado: los integrantes
+        miembros = cursor.fetchall()
+        conn.commit()      # guarda la auto-liberacion de reservas vencidas
+    except pyodbc.Error as error:
+        conn.rollback()
+        if codigo_error_sql(error) == 50030:
+            return jsonify({"error": limpiar_error_sql(error)}), 404
+        raise
+    finally:
+        conn.close()
 
+    por_reserva = {}
+    for m in miembros:
+        por_reserva.setdefault(m.id_reserva, []).append({
+            "matricula": m.matricula,
+            "nombre": m.nombre,
+            "es_responsable": bool(m.es_responsable),
+        })
+
+    return jsonify([{
+        "id_reserva": f.id_reserva,
+        "estado": f.estado,
+        "hora_inicio": iso(f.hora_inicio),
+        "hora_fin": iso(f.hora_fin),
+        "cantidad_integrantes": f.cantidad_integrantes,
+        "segundos_restantes": f.segundos_restantes,
+        "segundos_para_inicio": f.segundos_para_inicio,
+        "integrantes": por_reserva.get(f.id_reserva, []),
+    } for f in filas]), 200
 @app.route("/api/reservas/<int:id_reserva>", methods=["GET"])
 @personal_requerido
 def ver_reserva(id_reserva):

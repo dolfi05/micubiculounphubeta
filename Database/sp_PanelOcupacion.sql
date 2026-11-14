@@ -26,7 +26,9 @@ BEGIN
         a.hora_fin,
         CASE WHEN a.id_reserva IS NULL THEN NULL
              ELSE DATEDIFF(SECOND, @t, a.hora_fin) END AS segundos_restantes,
-        p.hora_inicio AS proxima_reserva
+        p.hora_inicio AS proxima_reserva,
+        (SELECT COUNT(*) FROM RESERVA x
+         WHERE x.id_cubiculo = c.id_cubiculo AND x.estado = 'activa' AND x.hora_fin > @t) AS pendientes
     FROM CUBICULO c
     OUTER APPLY (
         SELECT TOP 1 r.id_reserva, r.cantidad_integrantes, r.hora_inicio, r.hora_fin,
