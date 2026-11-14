@@ -1,7 +1,7 @@
-// Selector de hora con ventana desplegable (horas y minutos de 5 en 5).
+// Selector de hora con ventana desplegable (horas y minutos de 1 en 1).
 // Se engancha al campo <input id="hora"> y usa window.horasOcupadas (lo llena hora_libre.js).
 (function () {
-  const PASO = 5;
+  const PASO = 1;
   const MINUTOS = Array.from({ length: 60 / PASO }, (_, i) => i * PASO);
   const dos = (n) => String(n).padStart(2, "0");
 
@@ -138,10 +138,10 @@
       nota.textContent = "Las opciones tachadas ya pasaron, están ocupadas o fuera de horario.";
       panel.appendChild(nota);
 
-      // Deja a la vista la hora elegida
+      // Deja a la vista la opción elegida o, si no hay, la primera disponible
       for (const lista of [listaH, listaM]) {
-        const activa = lista.querySelector(".activa");
-        if (activa) lista.scrollTop = Math.max(0, activa.offsetTop - 60);
+        const destino = lista.querySelector(".activa") || lista.querySelector(".sh-opcion:not(:disabled)");
+        if (destino) lista.scrollTop = Math.max(0, destino.offsetTop - 60);
       }
     }
 
