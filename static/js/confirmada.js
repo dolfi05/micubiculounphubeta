@@ -4,10 +4,11 @@ function hora(textoIso) {
 
 async function cargar() {
   try {
-    const respuesta = await fetch("/api/mi-reserva");
+    const id = Number(new URLSearchParams(window.location.search).get("id"));
+    const respuesta = await fetch("/api/mis-reservas");
     if (respuesta.status === 401) { window.location.href = "/"; return; }
-    const datos = await respuesta.json();
-    const r = datos.reserva;
+    const reservas = await respuesta.json();
+    const r = reservas.find((x) => x.id_reserva === id) || reservas.find((x) => x.estado === "activa");
     if (!r) { window.location.href = "/disponibilidad"; return; }
 
     document.getElementById("c-numero").textContent = r.numero;
@@ -36,8 +37,9 @@ async function cargar() {
     document.getElementById("tarjeta").classList.remove("d-none");
     document.getElementById("c-aviso").classList.remove("d-none");
   } catch (error) {
+    console.error(error);
     document.getElementById("texto-confirmacion").textContent =
-      "No pudimos cargar los datos de tu reserva. Revisa la sección Mi reserva.";
+      "No pudimos cargar los datos de tu reserva. Revisa la sección Mis reservas.";
   }
 }
 
