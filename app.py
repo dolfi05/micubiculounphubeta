@@ -406,9 +406,6 @@ def mis_reservas():
         "es_responsable": bool(f.es_responsable),
         "segundos_restantes": f.segundos_restantes,
         "segundos_para_inicio": f.segundos_para_inicio,
-        "entrega_confirmada": bool(f.entrega_confirmada),
-        "entrega_hora": iso(f.entrega_hora),
-        "puede_confirmar": bool(f.puede_confirmar),
         "integrantes": por_reserva.get(f.id_reserva, []),
     } for f in filas]
     return jsonify(reservas), 200
@@ -514,6 +511,9 @@ def reservas_de_cubiculo(id_cubiculo):
         "cantidad_integrantes": f.cantidad_integrantes,
         "segundos_restantes": f.segundos_restantes,
         "segundos_para_inicio": f.segundos_para_inicio,
+        "entrega_confirmada": bool(f.entrega_confirmada),
+        "entrega_hora": iso(f.entrega_hora),
+        "puede_confirmar": bool(f.puede_confirmar),
         "integrantes": por_reserva.get(f.id_reserva, []),
     } for f in filas]), 200
 
