@@ -54,11 +54,6 @@ function crearFila(c) {
   ver.type = "button";
   ver.addEventListener("click", () => abrirReservas(c));
   acciones.appendChild(ver);
-  if (libre) {
-    const registrar = el("a", "btn btn-accion btn-accion-verde", "Registrar");
-    registrar.href = "/registro-presencial?cubiculo=" + c.numero;
-    acciones.appendChild(registrar);
-  }
   const tdAccion = celda(acciones);
   tdAccion.className = "text-end";
 
@@ -90,10 +85,13 @@ async function cargar() {
 
 // ---------- Ventana con todas las reservas del cubículo ----------
 function tarjetaReserva(r) {
-  const tipo = r.estado !== "activa" ? "finalizada"
+    const tipo = r.estado === "no_presentado" ? "no_presentado"
+    : r.estado !== "activa" ? "finalizada"
     : (r.segundos_restantes !== null ? "en_curso" : "proxima");
-  const texto = { en_curso: "En curso", proxima: "Próxima", finalizada: "Terminada" }[tipo];
-  const clase = { en_curso: "e-disponible", proxima: "e-por_vencer", finalizada: "e-ocupado" }[tipo];
+  const texto = { en_curso: "En curso", proxima: "Próxima", finalizada: "Terminada",
+                  no_presentado: "No se presentó" }[tipo];
+  const clase = { en_curso: "e-disponible", proxima: "e-por_vencer", finalizada: "e-ocupado",
+                  no_presentado: "e-urgente" }[tipo];
   const responsable = r.integrantes.find((i) => i.es_responsable);
 
   const tarjeta = el("div", "reserva-panel reserva-" + tipo);
@@ -127,7 +125,7 @@ function tarjetaReserva(r) {
   if (r.entrega_confirmada) {
     tarjeta.appendChild(el("div", "entrega-ok mt-3",
       "✓ Carnés y llave entregados a las " + hora(r.entrega_hora)));
-  } else if (tipo === "finalizada") {
+    } else if (tipo === "finalizada" || tipo === "no_presentado") {
     tarjeta.appendChild(el("div", "entrega-espera mt-3", "Entrega no registrada."));
   } else if (r.puede_confirmar) {
     const textoEntrega = "Confirmar entrega de carnés y llave";
@@ -155,7 +153,7 @@ function tarjetaReserva(r) {
   }
 
   // Liberar o cancelar: confirmación en dos pasos
-  if (tipo !== "finalizada") {
+    if (tipo === "en_curso" || tipo === "proxima") {
     const textoBoton = tipo === "en_curso" ? "Liberar cubículo" : "Cancelar reserva";
     const boton = el("button", "btn btn-rojo btn-sm mt-3", textoBoton);
     boton.type = "button";

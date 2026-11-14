@@ -406,6 +406,9 @@ def mis_reservas():
         "es_responsable": bool(f.es_responsable),
         "segundos_restantes": f.segundos_restantes,
         "segundos_para_inicio": f.segundos_para_inicio,
+        "entrega_confirmada": bool(f.entrega_confirmada),
+        "entrega_hora": iso(f.entrega_hora),
+        "segundos_limite_entrega": f.segundos_limite_entrega,
         "integrantes": por_reserva.get(f.id_reserva, []),
     } for f in filas]
     return jsonify(reservas), 200
@@ -536,8 +539,7 @@ def confirmar_entrega(id_reserva):
         codigo = codigo_error_sql(error)
         if codigo == 50020:
             return jsonify({"error": limpiar_error_sql(error)}), 404
-        if codigo in (50021, 50050, 50051):
-            return jsonify({"error": limpiar_error_sql(error)}), 409
+        if codigo in (50021, 50050, 50051, 50052):            return jsonify({"error": limpiar_error_sql(error)}), 409
         raise
     finally:
         conn.close()
@@ -572,6 +574,18 @@ def crear_reserva_presencial():
     fila, error = guardar_reserva(id_cubiculo, hora_inicio, integrantes)
     if error:
         return respuesta_error_reserva(*error)
+        # Registrada por el personal con el grupo presente: la entrega queda confirmada
+    sesion = session.get("personal")
+    id_personal = sesion.get("id_personal") if isinstance(sesion, dict) else sesion
+    conn = get_connection()
+    try:
+        conn.cursor().execute(
+            "EXEC sp_ConfirmarEntregaPresencial @id_reserva = ?, @id_personal = ?",
+            (fila.id_reserva, id_personal),
+        )
+        conn.commit()
+    finally:
+        conn.close()
     return jsonify({
         "mensaje": fila.mensaje,
         "id_reserva": fila.id_reserva,
@@ -603,12 +617,14 @@ def liberar_reserva(id_reserva):
         conn.close()
 
 def finalizar_vencidas_periodicamente(intervalo=30):
-    """Cada 'intervalo' segundos pasa a finalizada toda reserva cuya hora de fin ya paso (RF-04)."""
+    """Cada 'intervalo' segundos marca las no presentadas y finaliza las vencidas (RF-04)."""
     while True:
         try:
             conn = get_connection()
             try:
-                conn.cursor().execute("EXEC sp_FinalizarVencidas")
+                cursor = conn.cursor()
+                cursor.execute("EXEC sp_MarcarNoPresentados")
+                cursor.execute("EXEC sp_FinalizarVencidas")
                 conn.commit()
             finally:
                 conn.close()

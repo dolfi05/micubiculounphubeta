@@ -22,13 +22,15 @@ BEGIN
 
     IF @@ROWCOUNT = 1 RETURN;
 
-    -- No se actualizó nada: averiguar el motivo para informarlo
+    -- No se actualizo nada: averiguar el motivo para informarlo
     DECLARE @estado VARCHAR(20), @ini DATETIME, @fin DATETIME, @conf BIT;
     SELECT @estado = estado, @ini = hora_inicio, @fin = hora_fin, @conf = entrega_confirmada
     FROM RESERVA WHERE id_reserva = @id_reserva;
 
     IF @estado IS NULL
         THROW 50020, 'La reserva no existe.', 1;
+    IF @estado = 'no_presentado'
+        THROW 50052, 'La reserva se cancelo porque no se recogieron los carnes y la llave a tiempo.', 1;
     IF @estado <> 'activa' OR @fin <= @ahora
         THROW 50021, 'La reserva ya finalizo.', 1;
     IF @conf = 1

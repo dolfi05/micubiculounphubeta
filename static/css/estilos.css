@@ -941,3 +941,17 @@ h1, h2, h3, h4, h5, .fuente-titulo {
   color: #6B6B6B;
   font-size: 0.85rem;
 }
+.reserva-no_presentado { background: #FBF3F2; border-color: #E8C9C5; opacity: 0.9; }
+
+/* ---------- Avisos de entrega de carnés y llave ---------- */
+.aviso-entrega {
+  background: #FFF8E6;
+  border: 1px solid #F0DDA5;
+  color: #6B4E00;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+}
+
+.aviso-entrega-ok { background: #E8F5EC; border-color: #BFDCC8; color: var(--verde-oscuro); }
+.aviso-entrega-mal { background: #FBF3F2; border-color: #E8C9C5; color: #8A1F17; }

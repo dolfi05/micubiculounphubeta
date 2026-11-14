@@ -86,3 +86,9 @@ SELECT @id, id_estudiante, CASE WHEN matricula = '26-0004' THEN 1 ELSE 0 END
 FROM ESTUDIANTE
 WHERE matricula IN ('26-0004','26-0005','26-0006','26-0007','26-0008','24-0509','24-0081');
 GO
+
+-- Las reservas de prueba que ya empezaron cuentan como entregadas
+UPDATE RESERVA
+SET entrega_confirmada = 1, entrega_hora = GETDATE()
+WHERE estado = 'activa' AND hora_inicio <= GETDATE();
+GO
