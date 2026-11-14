@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 
 let items = [];        // una entrada por reserva, con referencias a su tarjeta
 let pendiente = null;  // reserva que se quiere cancelar
+let ultimaCarga = 0;
 
 function hora(textoIso) {
   return textoIso.substring(11, 16);
@@ -23,36 +24,54 @@ function el(etiqueta, clase, texto) {
   return e;
 }
 
+// proxima: aún no empieza · por_entregar: ya empezó pero el personal no confirmó la entrega
+// en_curso: entrega confirmada · finalizada · no_presentado
+function tipoDe(r) {
+  if (r.estado === "no_presentado") return "no_presentado";
+  if (r.estado !== "activa") return "finalizada";
+  if (r.segundos_restantes === null) return "proxima";
+  return r.entrega_confirmada ? "en_curso" : "por_entregar";
+}
+
+const esPasada = (tipo) => tipo === "finalizada" || tipo === "no_presentado";
+
+const CLASES = {
+  en_curso: "e-disponible", por_entregar: "e-por_vencer", proxima: "e-por_vencer",
+  finalizada: "e-ocupado", no_presentado: "e-urgente",
+};
+const TEXTOS = {
+  en_curso: "En curso", por_entregar: "Pendiente de entrega", proxima: "Próxima",
+  finalizada: "Finalizada", no_presentado: "Cancelada: no se presentó",
+};
+
 // ---------- Una tarjeta por reserva ----------
 function crearTarjeta(r) {
-  const tipo = r.estado !== "activa" ? "finalizada"
-    : (r.segundos_restantes !== null ? "en_curso" : "proxima");
+  const tipo = tipoDe(r);
   const item = {
     r, tipo,
     restante: r.segundos_restantes,
     falta: r.segundos_para_inicio,
+    limite: r.segundos_limite_entrega,
     duracion: Math.max(1, (new Date(r.hora_fin) - new Date(r.hora_inicio)) / 1000),
   };
 
-  const tarjeta = el("div", "tarjeta-reserva" + (tipo === "finalizada" ? " tarjeta-reserva-pasada" : ""));
+  const tarjeta = el("div", "tarjeta-reserva" + (esPasada(tipo) ? " tarjeta-reserva-pasada" : ""));
 
   // Cabecera: número, etiqueta de estado y tipo
   const cabecera = el("div", "d-flex justify-content-between align-items-center flex-wrap gap-2");
-  const izquierda = el("div", "d-flex align-items-center gap-3");
+  const izquierda = el("div", "d-flex align-items-center gap-3 flex-wrap");
   izquierda.appendChild(el("span", "cubiculo-numero", String(r.numero)));
-  const clase = { en_curso: "e-disponible", proxima: "e-por_vencer", finalizada: "e-ocupado" }[tipo];
-  const texto = { en_curso: "En curso", proxima: "Próxima", finalizada: "Finalizada" }[tipo];
-  izquierda.appendChild(el("span", "etiqueta " + clase, texto));
+  izquierda.appendChild(el("span", "etiqueta " + CLASES[tipo], TEXTOS[tipo]));
   if (r.tipo === "especial") izquierda.appendChild(el("span", "insignia-grupos", "Grupos 7+"));
   cabecera.appendChild(izquierda);
   cabecera.appendChild(el("div", "fw-semibold", hora(r.hora_inicio) + " – " + hora(r.hora_fin)));
   tarjeta.appendChild(cabecera);
 
-  // Reloj (solo en curso o próxima)
-  if (tipo !== "finalizada") {
+  // Reloj (todo menos las ya pasadas)
+  if (!esPasada(tipo)) {
     const bloque = el("div", "text-center my-3");
-    bloque.appendChild(el("div", "etiqueta-mayus",
-      tipo === "en_curso" ? "TIEMPO RESTANTE" : "EMPIEZA EN"));
+    const etiqueta = { en_curso: "TIEMPO RESTANTE", por_entregar: "SE CANCELA EN", proxima: "EMPIEZA EN" }[tipo];
+    bloque.appendChild(el("div", "etiqueta-mayus", etiqueta));
     item.reloj = el("div", "reloj-chico");
     bloque.appendChild(item.reloj);
     if (tipo === "en_curso") {
@@ -62,6 +81,26 @@ function crearTarjeta(r) {
       bloque.appendChild(barra);
     }
     tarjeta.appendChild(bloque);
+  }
+
+  // Estado de la entrega de carnés y llave
+  const limite = horaDesplazada(r.hora_inicio, 10);
+  if (tipo === "proxima") {
+    tarjeta.appendChild(el("div", "aviso-entrega mb-3",
+      "Recoge la llave y entrega los carnés en el mostrador entre las " +
+      horaDesplazada(r.hora_inicio, -10) + " y las " + limite +
+      ". Si el personal no confirma la entrega a tiempo, la reserva se cancelará automáticamente."));
+  } else if (tipo === "por_entregar") {
+    tarjeta.appendChild(el("div", "aviso-entrega mb-3",
+      "El personal aún no confirmó la entrega. Acércate al mostrador con los carnés de todos los " +
+      "integrantes antes de las " + limite + " o la reserva se cancelará. Hasta entonces no puedes usar el cubículo."));
+  } else if (tipo === "en_curso") {
+    tarjeta.appendChild(el("div", "aviso-entrega aviso-entrega-ok mb-3",
+      "✓ Carnés y llave entregados a las " + hora(r.entrega_hora)));
+  } else if (tipo === "no_presentado") {
+    tarjeta.appendChild(el("div", "aviso-entrega aviso-entrega-mal mb-3",
+      "Esta reserva se canceló automáticamente porque no se recogieron la llave y los carnés antes de las " +
+      limite + ". El cubículo quedó libre para otras personas."));
   }
 
   // Integrantes
@@ -77,7 +116,7 @@ function crearTarjeta(r) {
   tarjeta.appendChild(lista);
 
   // Cancelar: solo si la reserva sigue activa y eres el responsable
-  if (tipo !== "finalizada" && r.es_responsable) {
+  if (!esPasada(tipo) && r.es_responsable) {
     const boton = el("button", "btn btn-rojo btn-sm mt-3", "Cancelar reserva");
     boton.type = "button";
     boton.addEventListener("click", () => abrirCancelar(item));
@@ -96,6 +135,9 @@ function pintar(item) {
     const urgente = item.restante <= 600;   // el aviso en sí lo muestra estudiante.js
     item.reloj.classList.toggle("reloj-rojo", urgente);
     item.relleno.classList.toggle("barra-roja", urgente);
+  } else if (item.tipo === "por_entregar") {
+    item.reloj.textContent = formato(item.limite);
+    item.reloj.classList.toggle("reloj-rojo", item.limite <= 180);
   } else if (item.tipo === "proxima") {
     item.reloj.textContent = formato(item.falta);
   }
@@ -107,17 +149,22 @@ function tic() {
     if (item.tipo === "en_curso") {
       item.restante--;
       if (item.restante <= 0) recargar = true;
+    } else if (item.tipo === "por_entregar") {
+      item.limite--;
+      if (item.limite <= 0) recargar = true;
     } else if (item.tipo === "proxima") {
       item.falta--;
       if (item.falta <= 0) recargar = true;
     }
     pintar(item);
   }
-  if (recargar) cargar();   // alguna empezó o terminó: pedir el estado real
+  // alguna empezó o terminó: pedir el estado real (sin saturar al servidor)
+  if (recargar && Date.now() - ultimaCarga > 5000) cargar();
 }
 
 // ---------- Carga ----------
 async function cargar() {
+  ultimaCarga = Date.now();
   try {
     const respuesta = await fetch("/api/mis-reservas");
     if (respuesta.status === 401) { window.location.href = "/"; return; }
@@ -125,8 +172,8 @@ async function cargar() {
     if (!respuesta.ok) throw new Error(reservas.error || "Error");
 
     items = reservas.map(crearTarjeta);
-    const activas = items.filter((i) => i.tipo !== "finalizada");
-    const terminadas = items.filter((i) => i.tipo === "finalizada");
+    const activas = items.filter((i) => !esPasada(i.tipo));
+    const terminadas = items.filter((i) => esPasada(i.tipo));
 
     $("lista-activas").replaceChildren(...activas.map((i) => i.tarjeta));
     $("lista-terminadas").replaceChildren(...terminadas.map((i) => i.tarjeta));

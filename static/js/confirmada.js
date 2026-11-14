@@ -30,10 +30,20 @@ async function cargar() {
       lista.appendChild(li);
     }
 
-    document.getElementById("texto-confirmacion").textContent =
-      r.segundos_restantes !== null
-        ? "Tu cubículo está listo. Puedes pasar a usarlo desde ahora."
-        : "Tu cubículo queda reservado desde las " + hora(r.hora_inicio) + ".";
+    // Aviso: recoger la llave y entregar los carnés en la ventana de tiempo
+    const texto = document.getElementById("texto-confirmacion");
+    if (r.entrega_confirmada) {
+      texto.textContent = "Tu reserva está registrada y la entrega de la llave ya fue confirmada.";
+    } else {
+      texto.textContent = "Tu reserva quedó registrada. Falta recoger la llave y entregar los carnés.";
+      const aviso = document.createElement("div");
+      aviso.className = "aviso-entrega mt-3 mb-4";      aviso.textContent =
+        "Importante: recoge la llave y entrega los carnés en el mostrador entre las " +
+        horaDesplazada(r.hora_inicio, -10) + " y las " + horaDesplazada(r.hora_inicio, 10) +
+        ". Hasta que el personal confirme la entrega no puedes usar el cubículo, y si no se confirma " +
+        "a tiempo, la reserva se cancelará automáticamente.";
+      texto.insertAdjacentElement("afterend", aviso);
+    }
     document.getElementById("tarjeta").classList.remove("d-none");
     document.getElementById("c-aviso").classList.remove("d-none");
   } catch (error) {
