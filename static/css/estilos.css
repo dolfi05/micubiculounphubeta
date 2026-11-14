@@ -926,3 +926,18 @@ h1, h2, h3, h4, h5, .fuente-titulo {
 .reserva-finalizada { background: #FBFAF6; opacity: 0.85; }
 
 .reserva-panel summary { cursor: pointer; color: var(--verde-oscuro); }
+
+/* ---------- Entrega de carnés y llave ---------- */
+.entrega-ok {
+  background: #E8F5EC;
+  color: var(--verde-oscuro);
+  border-radius: 12px;
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.entrega-espera {
+  color: #6B6B6B;
+  font-size: 0.85rem;
+}

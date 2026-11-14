@@ -28,7 +28,13 @@ BEGIN
            CASE WHEN r.estado = 'activa' AND r.hora_inicio <= @t
                 THEN DATEDIFF(SECOND, @t, r.hora_fin) END AS segundos_restantes,
            CASE WHEN r.estado = 'activa' AND r.hora_inicio > @t
-                THEN DATEDIFF(SECOND, @t, r.hora_inicio) END AS segundos_para_inicio
+                THEN DATEDIFF(SECOND, @t, r.hora_inicio) END AS segundos_para_inicio,
+           r.entrega_confirmada,
+           r.entrega_hora,
+           CASE WHEN r.estado = 'activa' AND r.entrega_confirmada = 0
+                 AND r.hora_fin > @t
+                 AND @t >= DATEADD(MINUTE, -10, r.hora_inicio)
+                THEN 1 ELSE 0 END AS puede_confirmar
     FROM @del d
     JOIN RESERVA r ON r.id_reserva = d.id_reserva
     ORDER BY r.hora_inicio;
