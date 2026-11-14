@@ -762,3 +762,42 @@ h1, h2, h3, h4, h5, .fuente-titulo {
   padding: 16px 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
 }
+
+/* ---------- Cuentas: pasos, código y enlaces ---------- */
+.pasos { display: flex; gap: 8px; margin: 12px 0 20px; }
+
+.paso-punto {
+  flex: 1;
+  height: 6px;
+  border-radius: 999px;
+  background: #E6E2D6;
+}
+
+.paso-punto.activo { background: var(--verde); }
+
+.campo-codigo {
+  font-family: "Sora", sans-serif;
+  font-size: 1.8rem;
+  letter-spacing: 0.5em;
+  text-align: center;
+  padding-left: 0.5em;
+}
+
+.enlace-suave {
+  color: var(--verde-oscuro);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.enlace-suave:hover { text-decoration: underline; }
+
+.btn-enlace {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--verde-oscuro);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-enlace:disabled { color: var(--texto-suave); font-weight: 400; }

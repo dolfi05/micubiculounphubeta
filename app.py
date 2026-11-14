@@ -111,28 +111,9 @@ def ver_sesion():
     return jsonify({"rol": None}), 200
 
 
-@app.route("/api/ingreso", methods=["POST"])
-def ingreso_estudiante():
-    """El estudiante entra con nombre y matricula, sin contrasena."""
-    datos = request.get_json(silent=True) or {}
-    nombre = (datos.get("nombre") or "").strip()
-    matricula = (datos.get("matricula") or "").strip()
 
-    errores = []
-    if not nombre:
-        errores.append("Escribe tu nombre completo.")
-    elif len(nombre) > 100:
-        errores.append("El nombre es demasiado largo (maximo 100 caracteres).")
-    if not matricula:
-        errores.append("Escribe tu matricula.")
-    elif not MATRICULA_VALIDA.match(matricula):
-        errores.append("La matricula no es valida. Usa el formato 24-0302.")
-    if errores:
-        return jsonify({"error": " | ".join(errores)}), 400
 
-    session.clear()
-    session["estudiante"] = {"nombre": nombre, "matricula": matricula}
-    return jsonify({"nombre": nombre, "matricula": matricula}), 200
+
 
 
 @app.route("/api/login", methods=["POST"])
@@ -762,6 +743,15 @@ def recuperar_cambiar():
 @app.route("/")
 def pagina_ingreso():
     return render_template("ingreso.html")
+
+@app.route("/registro")
+def pagina_registro():
+    return render_template("registro.html")
+
+
+@app.route("/recuperar")
+def pagina_recuperar():
+    return render_template("recuperar.html")
 
 
 @app.route("/disponibilidad")
