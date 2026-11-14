@@ -123,6 +123,37 @@ function tarjetaReserva(r) {
   detalle.appendChild(lista);
   tarjeta.appendChild(detalle);
 
+    // Entrega de carnés y llave
+  if (r.entrega_confirmada) {
+    tarjeta.appendChild(el("div", "entrega-ok mt-3",
+      "✓ Carnés y llave entregados a las " + hora(r.entrega_hora)));
+  } else if (tipo === "finalizada") {
+    tarjeta.appendChild(el("div", "entrega-espera mt-3", "Entrega no registrada."));
+  } else if (r.puede_confirmar) {
+    const textoEntrega = "Confirmar entrega de carnés y llave";
+    const botonEntrega = el("button", "btn btn-verde btn-sm mt-3 me-2", textoEntrega);
+    botonEntrega.type = "button";
+    let temporizadorEntrega = null;
+    botonEntrega.addEventListener("click", () => {
+      if (botonEntrega.dataset.confirmar !== "1") {
+        botonEntrega.dataset.confirmar = "1";
+        botonEntrega.textContent = "¿Carnés y llave entregados? Pulsa de nuevo";
+        temporizadorEntrega = setTimeout(() => {
+          botonEntrega.dataset.confirmar = "";
+          botonEntrega.textContent = textoEntrega;
+        }, 4000);
+        return;
+      }
+      clearTimeout(temporizadorEntrega);
+      confirmarEntrega(r.id_reserva, botonEntrega);
+    });
+    tarjeta.appendChild(botonEntrega);
+  } else {
+    const faltan = Math.max(1, Math.ceil((r.segundos_para_inicio - 600) / 60));
+    tarjeta.appendChild(el("div", "entrega-espera mt-3",
+      "La entrega se habilita 10 minutos antes del inicio (en " + faltan + " min)."));
+  }
+
   // Liberar o cancelar: confirmación en dos pasos
   if (tipo !== "finalizada") {
     const textoBoton = tipo === "en_curso" ? "Liberar cubículo" : "Cancelar reserva";
@@ -197,6 +228,26 @@ async function liberar(idReserva, boton) {
     cajaError.classList.remove("d-none");
   }
   await Promise.all([cargarReservas(), cargar()]);   // actualiza la ventana y el panel
+}
+
+async function confirmarEntrega(idReserva, boton) {
+  const cajaError = $("m-error");
+  cajaError.classList.add("d-none");
+  boton.disabled = true;
+  try {
+    const respuesta = await fetch("/api/reservas/" + idReserva + "/entrega", { method: "POST" });
+    if (respuesta.status === 401) { window.location.href = "/personal"; return; }
+    const datos = await respuesta.json().catch(() => ({}));
+    if (!respuesta.ok) {
+      cajaError.textContent = datos.error || "No se pudo confirmar la entrega.";
+      cajaError.classList.remove("d-none");
+    }
+  } catch (error) {
+    console.error(error);
+    cajaError.textContent = "No pudimos conectar con el servidor.";
+    cajaError.classList.remove("d-none");
+  }
+  await cargarReservas();   // refleja el cambio en la ventana
 }
 
 $("modal-reservas").addEventListener("hidden.bs.modal", () => { cubiculoAbierto = null; });

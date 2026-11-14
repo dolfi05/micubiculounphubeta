@@ -406,6 +406,9 @@ def mis_reservas():
         "es_responsable": bool(f.es_responsable),
         "segundos_restantes": f.segundos_restantes,
         "segundos_para_inicio": f.segundos_para_inicio,
+        "entrega_confirmada": bool(f.entrega_confirmada),
+        "entrega_hora": iso(f.entrega_hora),
+        "puede_confirmar": bool(f.puede_confirmar),
         "integrantes": por_reserva.get(f.id_reserva, []),
     } for f in filas]
     return jsonify(reservas), 200
@@ -513,6 +516,34 @@ def reservas_de_cubiculo(id_cubiculo):
         "segundos_para_inicio": f.segundos_para_inicio,
         "integrantes": por_reserva.get(f.id_reserva, []),
     } for f in filas]), 200
+
+@app.route("/api/reservas/<int:id_reserva>/entrega", methods=["POST"])
+@personal_requerido
+def confirmar_entrega(id_reserva):
+    sesion = session.get("personal")
+    id_personal = sesion.get("id_personal") if isinstance(sesion, dict) else sesion
+
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "EXEC sp_ConfirmarEntrega @id_reserva = ?, @id_personal = ?",
+            (id_reserva, id_personal),
+        )
+        conn.commit()
+    except pyodbc.Error as error:
+        conn.rollback()
+        codigo = codigo_error_sql(error)
+        if codigo == 50020:
+            return jsonify({"error": limpiar_error_sql(error)}), 404
+        if codigo in (50021, 50050, 50051):
+            return jsonify({"error": limpiar_error_sql(error)}), 409
+        raise
+    finally:
+        conn.close()
+
+    return jsonify({"ok": True}), 200
+
 @app.route("/api/reservas/<int:id_reserva>", methods=["GET"])
 @personal_requerido
 def ver_reserva(id_reserva):
