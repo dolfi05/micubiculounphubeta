@@ -7,11 +7,15 @@ const listaErrores = $("lista-errores");
 const selectorHora = $("hora");
 const botonRegistrar = $("boton-registrar");
 
-let libres = [];      // cubículos disponibles ahora
+let libres = [];      // todos los cubículos (los ocupados se reservan en otro horario)
 let cubiculo = null;  // el elegido
 let cantidad = 2;
 let otros = [];       // integrantes 2..n
 let campos = [];
+
+function hora(textoIso) {
+  return textoIso.substring(11, 16);
+}
 
 function mostrarErrores(lista) {
   listaErrores.replaceChildren();
@@ -42,7 +46,7 @@ function limpiarErrores() {
   }
 }
 
-// ---------- Cubículos libres ----------
+// ---------- Cubículos ----------
 function dibujarCubiculos() {
   const caja = $("cubiculos-libres");
   caja.replaceChildren();
@@ -51,6 +55,10 @@ function dibujarCubiculos() {
     const boton = document.createElement("button");
     boton.type = "button";
     boton.className = "chip-cubiculo" + (cubiculo && cubiculo.id_cubiculo === c.id_cubiculo ? " chip-activo" : "");
+    if (c.estado !== "disponible") {
+      boton.classList.add("chip-ocupado");
+      boton.title = "Ocupado ahora hasta las " + hora(c.se_libera_a) + ". Puedes registrar otro horario.";
+    }
     boton.textContent = c.numero;
     if (c.tipo === "especial") {
       const insignia = document.createElement("span");
@@ -63,7 +71,7 @@ function dibujarCubiculos() {
   }
 }
 
-function elegirCubiculo(c) {
+async function elegirCubiculo(c) {
   cubiculo = c;
   dibujarCubiculos();
   $("resumen-numero").textContent = c.numero;
@@ -74,7 +82,9 @@ function elegirCubiculo(c) {
 
   selectorHora.value = horaActualTexto();
   actualizarResumen();
-  cargarOcupadas(c.id_cubiculo, $("ocupadas"));
+  await cargarOcupadas(c.id_cubiculo, $("ocupadas"));
+  selectorHora.value = primeraHoraLibre() || horaActualTexto();   // primera hora que no choca
+  actualizarResumen();
 }
 
 function actualizarResumen() {
@@ -145,12 +155,14 @@ $("mas").addEventListener("click", () => { if (cantidad < MAXIMO) { cantidad++; 
 function validar() {
   const errores = [];
   if (!cubiculo) {
-    errores.push("Elige un cubículo libre.");
-  } else if (cantidad < cubiculo.capacidad_minima) {
-    errores.push("El cubículo " + cubiculo.numero + " requiere al menos " + cubiculo.capacidad_minima +
-                 " personas. El grupo tiene " + cantidad + ".");
+    errores.push("Elige un cubículo.");
+  } else {
+    if (!inicioIso(selectorHora.value)) errores.push("Elige la hora de inicio.");
+    if (cantidad < cubiculo.capacidad_minima) {
+      errores.push("El cubículo " + cubiculo.numero + " requiere al menos " + cubiculo.capacidad_minima +
+                   " personas. El grupo tiene " + cantidad + ".");
+    }
   }
-  if (!inicioIso(selectorHora.value)) errores.push("Escribe la hora de inicio (por ejemplo 14:35).");
 
   const nombre = $("resp-nombre").value.trim();
   const matricula = $("resp-matricula").value.trim();
@@ -227,7 +239,7 @@ $("form-presencial").addEventListener("submit", async (evento) => {
 
     if (respuesta.ok) { window.location.href = "/panel"; return; }
     mostrarErrores(datos.errores || [datos.error || "No se pudo registrar la reserva."]);
-    if (datos.tipo === "cubiculo_ocupado") await cargarLibres();   // refresca los libres
+    if (datos.tipo === "cubiculo_ocupado") await cargarLibres();   // refresca los cubículos
   } catch (error) {
     mostrarErrores(["No pudimos conectar con el servidor. Intenta de nuevo."]);
   } finally {
@@ -240,7 +252,7 @@ $("form-presencial").addEventListener("submit", async (evento) => {
 async function cargarLibres() {
   const r = await fetch("/api/cubiculos");
   if (r.status === 401) { window.location.href = "/personal"; return; }
-  libres = (await r.json()).filter((c) => c.estado === "disponible");
+  libres = await r.json();   // todos los cubículos; los ocupados se reservan en otro horario
   if (cubiculo && !libres.some((c) => c.id_cubiculo === cubiculo.id_cubiculo)) cubiculo = null;
   dibujarCubiculos();
 }
@@ -251,8 +263,9 @@ async function iniciar() {
     actualizarCantidad();
     const pedido = Number(new URLSearchParams(window.location.search).get("cubiculo"));
     const inicial = libres.find((c) => c.numero === pedido);
-    if (inicial) elegirCubiculo(inicial);
+    if (inicial) await elegirCubiculo(inicial);
   } catch (error) {
+    console.error(error);
     mostrarErrores(["No pudimos cargar los cubículos. Recarga la página."]);
   }
 }

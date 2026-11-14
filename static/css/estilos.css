@@ -864,3 +864,31 @@ h1, h2, h3, h4, h5, .fuente-titulo {
 .sh-ahora { width: 100%; background: #E3F1E8; color: var(--verde-oscuro); }
 
 .sh-nota { font-size: 0.78rem; color: var(--texto-suave); margin-top: 10px; }
+
+/* ---------- Cubículo ocupado que se puede reservar en otro horario ---------- */
+.cubiculo-proxima {
+  font-size: 0.82rem;
+  color: var(--texto-suave);
+  margin: 0;
+}
+
+.btn-otro-horario {
+  background: #fff;
+  color: var(--verde-oscuro);
+  border: 1px solid var(--verde);
+  border-radius: 12px;
+  padding: 13px 20px;
+  font-weight: 600;
+}
+
+.btn-otro-horario:hover,
+.btn-otro-horario:focus {
+  background: #E3F1E8;
+  color: var(--verde-oscuro);
+}
+
+.chip-cubiculo.chip-ocupado:not(.chip-activo) {
+  background: #F8F6F0;
+  border-color: #C9C5B5;
+  color: #6B6B5F;
+}
