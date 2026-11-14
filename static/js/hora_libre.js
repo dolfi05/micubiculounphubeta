@@ -24,12 +24,14 @@ function sumarDosHoras(valor) {
   return dos((h + 2) % 24) + ":" + dos(m);
 }
 
-// Dibuja la lista de horas ocupadas dentro de un contenedor
+// Dibuja la lista de horas ocupadas y las guarda para el selector de hora
 async function cargarOcupadas(idCubiculo, contenedor) {
   contenedor.replaceChildren();
+  window.horasOcupadas = [];
   try {
     const r = await fetch("/api/cubiculos/" + idCubiculo + "/ocupadas");
     const lista = r.ok ? await r.json() : [];
+    window.horasOcupadas = lista.map((o) => ({ ini: new Date(o.hora_inicio), fin: new Date(o.hora_fin) }));
     if (lista.length === 0) {
       contenedor.textContent = "Este cubículo no tiene reservas pendientes hoy.";
       return;

@@ -801,3 +801,66 @@ h1, h2, h3, h4, h5, .fuente-titulo {
 }
 
 .btn-enlace:disabled { color: var(--texto-suave); font-weight: 400; }
+
+/* ---------- Selector de hora ---------- */
+.selector-hora-caja { position: relative; }
+
+.form-control.selector-hora-entrada {
+  cursor: pointer;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235F6660' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 16px center;
+  padding-right: 44px;
+  font-family: "Sora", sans-serif;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.selector-hora-panel {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(340px, 100%);
+  min-width: 260px;
+  background: #fff;
+  border: 1px solid #E6E2D6;
+  border-radius: 16px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+}
+
+.sh-columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+
+.sh-titulo {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: var(--texto-suave);
+  margin: 2px 0 6px;
+}
+
+.sh-lista {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sh-opcion {
+  border: 0;
+  background: var(--fondo);
+  border-radius: 10px;
+  padding: 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.sh-opcion:hover:not(:disabled) { background: #E3F1E8; }
+.sh-opcion.activa { background: var(--verde); color: #fff; }
+.sh-opcion:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: line-through; }
+
+.sh-ahora { width: 100%; background: #E3F1E8; color: var(--verde-oscuro); }
+
+.sh-nota { font-size: 0.78rem; color: var(--texto-suave); margin-top: 10px; }
