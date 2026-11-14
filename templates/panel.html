@@ -31,37 +31,27 @@
   </table>
 </div>
 
-<!-- Ventana "Ver / liberar" -->
-<div class="modal fade" id="modal-reserva" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+<!-- Ventana con todas las reservas del cubículo -->
+<div class="modal fade" id="modal-reservas" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
     <div class="modal-content modal-redondo">
       <div class="modal-body p-4">
         <div class="d-flex justify-content-between align-items-start mb-3">
-          <div class="d-flex align-items-center gap-3 flex-wrap">
-            <span class="cubiculo-numero" id="m-numero"></span>
-            <span class="etiqueta" id="m-estado"></span>
+          <div>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <span class="cubiculo-numero" id="m-numero"></span>
+              <span class="etiqueta" id="m-estado"></span>
+            </div>
+            <p class="text-secondary small mb-0 mt-2">Todas las reservas de hoy en este cubículo</p>
           </div>
           <button type="button" class="btn-cerrar" data-bs-dismiss="modal" aria-label="Cerrar">×</button>
         </div>
 
         <div id="m-error" class="caja-error d-none" role="alert"></div>
+        <div id="m-lista" class="d-grid gap-3"></div>
 
-        <div class="fila-dato"><span>Responsable</span><strong id="m-responsable"></strong></div>
-        <div class="fila-dato"><span>Horario</span><strong id="m-horario"></strong></div>
-        <div class="fila-dato"><span>Personas</span><strong id="m-personas"></strong></div>
-
-        <div class="caja-matriculas">
-          <small class="fw-semibold">Matrículas del grupo</small>
-          <div id="m-matriculas"></div>
-        </div>
-
-        <p class="text-secondary small mt-3">
-          Al liberar, la reserva pasa a "finalizada" y el cubículo queda disponible de inmediato.
-        </p>
-
-        <div class="d-flex justify-content-end gap-2">
+        <div class="d-flex justify-content-end mt-4">
           <button type="button" class="btn btn-salir" data-bs-dismiss="modal">Cerrar</button>
-          <button type="button" class="btn btn-rojo" id="m-liberar">Liberar cubículo</button>
         </div>
       </div>
     </div>

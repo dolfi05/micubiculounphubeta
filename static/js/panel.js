@@ -1,20 +1,25 @@
-const filas = document.getElementById("filas");
-const avisoError = document.getElementById("aviso-error");
-const modal = new bootstrap.Modal(document.getElementById("modal-reserva"));
+const $ = (id) => document.getElementById(id);
+const filas = $("filas");
+const avisoError = $("aviso-error");
+const modal = new bootstrap.Modal($("modal-reservas"));
 const ETIQUETAS = { disponible: "Disponible", ocupado: "Ocupado", por_vencer: "Por vencer", urgente: "Urgente" };
 
-let reservaAbierta = null;   // id de la reserva que se ve en la ventana
+let cubiculoAbierto = null;   // cubículo cuya ventana está abierta
 
 function hora(textoIso) {
   return textoIso.substring(11, 16);
 }
 
+function el(etiqueta, clase, texto) {
+  const e = document.createElement(etiqueta);
+  if (clase) e.className = clase;
+  if (texto !== undefined) e.textContent = texto;   // textContent: nunca insertamos HTML ajeno
+  return e;
+}
+
 function crearEtiqueta(nivel) {
-  const e = document.createElement("span");
-  e.className = "etiqueta e-" + nivel;
-  const punto = document.createElement("i");
-  punto.className = "punto p-" + nivel;
-  e.append(punto, " " + ETIQUETAS[nivel]);
+  const e = el("span", "etiqueta e-" + nivel);
+  e.append(el("i", "punto p-" + nivel), " " + ETIQUETAS[nivel]);
   return e;
 }
 
@@ -24,20 +29,13 @@ function celda(...hijos) {
   return td;
 }
 
+// ---------- Tabla del panel ----------
 function crearFila(c) {
   const libre = c.estado === "disponible";
   const tr = document.createElement("tr");
 
-  const numero = document.createElement("span");
-  numero.className = "numero-fila";
-  numero.textContent = c.numero;
-  const tdNumero = celda(numero);
-  if (c.tipo === "especial") {
-    const insignia = document.createElement("span");
-    insignia.className = "insignia-grupos ms-2";
-    insignia.textContent = "7+";
-    tdNumero.appendChild(insignia);
-  }
+  const tdNumero = celda(el("span", "numero-fila", String(c.numero)));
+  if (c.tipo === "especial") tdNumero.appendChild(el("span", "insignia-grupos ms-2", "7+"));
 
   let tdResp, tdPersonas, tdHorario;
   if (libre) {
@@ -45,28 +43,23 @@ function crearFila(c) {
     tdPersonas = celda("—");
     tdHorario = celda(c.proxima_reserva ? "Próxima " + hora(c.proxima_reserva) : "—");
   } else {
-    const nombre = document.createElement("div");
-    nombre.textContent = c.responsable_nombre;
-    const matricula = document.createElement("small");
-    matricula.className = "text-secondary";
-    matricula.textContent = c.responsable_matricula;
-    tdResp = celda(nombre, matricula);
+    tdResp = celda(el("div", "", c.responsable_nombre), el("small", "text-secondary", c.responsable_matricula));
     tdPersonas = celda(String(c.cantidad_integrantes));
     tdHorario = celda(hora(c.hora_inicio) + " – " + hora(c.hora_fin));
   }
 
-  const accion = document.createElement(libre ? "a" : "button");
+  // Acciones: ver todas las reservas y, si está libre, registrar
+  const acciones = el("div", "d-flex gap-2 justify-content-end flex-wrap");
+  const ver = el("button", "btn btn-accion btn-accion-rojo", "Reservas (" + c.pendientes + ")");
+  ver.type = "button";
+  ver.addEventListener("click", () => abrirReservas(c));
+  acciones.appendChild(ver);
   if (libre) {
-    accion.className = "btn btn-accion btn-accion-verde";
-    accion.href = "/registro-presencial?cubiculo=" + c.numero;
-    accion.textContent = "Registrar";
-  } else {
-    accion.type = "button";
-    accion.className = "btn btn-accion btn-accion-rojo";
-    accion.textContent = "Ver / liberar";
-    accion.addEventListener("click", () => abrirReserva(c));
+    const registrar = el("a", "btn btn-accion btn-accion-verde", "Registrar");
+    registrar.href = "/registro-presencial?cubiculo=" + c.numero;
+    acciones.appendChild(registrar);
   }
-  const tdAccion = celda(accion);
+  const tdAccion = celda(acciones);
   tdAccion.className = "text-end";
 
   tr.append(tdNumero, celda(crearEtiqueta(c.nivel)), tdResp, tdPersonas, tdHorario, tdAccion);
@@ -81,68 +74,133 @@ async function cargar() {
     if (!respuesta.ok) throw new Error(datos.error || "Error");
 
     filas.replaceChildren(...datos.cubiculos.map(crearFila));
-    document.getElementById("n-libres").textContent = datos.resumen.libres;
-    document.getElementById("n-ocupados").textContent = datos.resumen.ocupados;
-    document.getElementById("n-por-vencer").textContent = datos.resumen.por_vencer;
+    $("n-libres").textContent = datos.resumen.libres;
+    $("n-ocupados").textContent = datos.resumen.ocupados;
+    $("n-por-vencer").textContent = datos.resumen.por_vencer;
 
     const ahora = new Date().toTimeString().substring(0, 5);
-    document.getElementById("subtitulo").textContent = "Estado actual de los 10 cubículos · " + ahora;
+    $("subtitulo").textContent = "Estado actual de los 10 cubículos · " + ahora;
     avisoError.classList.add("d-none");
   } catch (error) {
+    console.error(error);
     avisoError.textContent = "No pudimos actualizar el panel. Reintentando...";
     avisoError.classList.remove("d-none");
   }
 }
 
-// ---------- Ventana "Ver / liberar" ----------
-async function abrirReserva(c) {
-  reservaAbierta = c.id_reserva;
-  document.getElementById("m-error").classList.add("d-none");
-  document.getElementById("m-numero").textContent = c.numero;
-  const etiqueta = document.getElementById("m-estado");
-  etiqueta.className = "etiqueta e-" + c.nivel;
-  etiqueta.textContent = ETIQUETAS[c.nivel] + " · libera " + hora(c.hora_fin);
-  document.getElementById("m-responsable").textContent = c.responsable_nombre + " · " + c.responsable_matricula;
-  document.getElementById("m-horario").textContent = hora(c.hora_inicio) + " – " + hora(c.hora_fin);
-  document.getElementById("m-personas").textContent = c.cantidad_integrantes;
-  document.getElementById("m-matriculas").textContent = "Cargando...";
-  modal.show();
+// ---------- Ventana con todas las reservas del cubículo ----------
+function tarjetaReserva(r) {
+  const tipo = r.estado !== "activa" ? "finalizada"
+    : (r.segundos_restantes !== null ? "en_curso" : "proxima");
+  const texto = { en_curso: "En curso", proxima: "Próxima", finalizada: "Terminada" }[tipo];
+  const clase = { en_curso: "e-disponible", proxima: "e-por_vencer", finalizada: "e-ocupado" }[tipo];
+  const responsable = r.integrantes.find((i) => i.es_responsable);
 
+  const tarjeta = el("div", "reserva-panel reserva-" + tipo);
+
+  const cabecera = el("div", "d-flex justify-content-between align-items-center flex-wrap gap-2");
+  cabecera.appendChild(el("div", "fuente-titulo fs-5 fw-bold", hora(r.hora_inicio) + " – " + hora(r.hora_fin)));
+  cabecera.appendChild(el("span", "etiqueta " + clase, texto));
+  tarjeta.appendChild(cabecera);
+
+  const datos = el("div", "text-secondary small mt-1");
+  datos.textContent = (responsable ? "Responsable: " + responsable.nombre + " (" + responsable.matricula + ")" : "") +
+    " · " + r.cantidad_integrantes + " personas";
+  if (tipo === "en_curso") datos.textContent += " · termina en " + Math.ceil(r.segundos_restantes / 60) + " min";
+  if (tipo === "proxima") datos.textContent += " · empieza en " + Math.ceil(r.segundos_para_inicio / 60) + " min";
+  tarjeta.appendChild(datos);
+
+  // Grupo completo (elemento nativo desplegable)
+  const detalle = el("details", "mt-2");
+  detalle.appendChild(el("summary", "fw-semibold small", "Ver grupo (" + r.integrantes.length + ")"));
+  const lista = el("ul", "lista-integrantes mb-0 mt-2");
+  for (const i of r.integrantes) {
+    const li = el("li");
+    li.appendChild(el("span", "", i.nombre + (i.es_responsable ? " · responsable" : "")));
+    li.appendChild(el("span", "text-secondary", i.matricula));
+    lista.appendChild(li);
+  }
+  detalle.appendChild(lista);
+  tarjeta.appendChild(detalle);
+
+  // Liberar o cancelar: confirmación en dos pasos
+  if (tipo !== "finalizada") {
+    const textoBoton = tipo === "en_curso" ? "Liberar cubículo" : "Cancelar reserva";
+    const boton = el("button", "btn btn-rojo btn-sm mt-3", textoBoton);
+    boton.type = "button";
+    let temporizador = null;
+    boton.addEventListener("click", () => {
+      if (boton.dataset.confirmar !== "1") {
+        boton.dataset.confirmar = "1";
+        boton.textContent = "¿Seguro? Pulsa de nuevo para confirmar";
+        temporizador = setTimeout(() => {
+          boton.dataset.confirmar = "";
+          boton.textContent = textoBoton;
+        }, 4000);
+        return;
+      }
+      clearTimeout(temporizador);
+      liberar(r.id_reserva, boton);
+    });
+    tarjeta.appendChild(boton);
+  }
+  return tarjeta;
+}
+
+async function cargarReservas() {
+  if (!cubiculoAbierto) return;
   try {
-    const respuesta = await fetch("/api/reservas/" + c.id_reserva);
-    const datos = await respuesta.json();
-    if (!respuesta.ok) throw new Error(datos.error);
-    document.getElementById("m-matriculas").textContent =
-      datos.integrantes.map((i) => i.matricula).join(" · ");
+    const respuesta = await fetch("/api/cubiculos/" + cubiculoAbierto.id_cubiculo + "/reservas");
+    if (respuesta.status === 401) { window.location.href = "/personal"; return; }
+    const reservas = await respuesta.json();
+    if (!respuesta.ok) throw new Error(reservas.error || "Error");
+
+    if (reservas.length === 0) {
+      $("m-lista").replaceChildren(el("div", "text-secondary text-center py-3",
+        "Este cubículo no tiene reservas hoy."));
+    } else {
+      $("m-lista").replaceChildren(...reservas.map(tarjetaReserva));
+    }
   } catch (error) {
-    document.getElementById("m-matriculas").textContent = "No se pudieron cargar las matrículas.";
+    console.error(error);
+    $("m-lista").replaceChildren(el("div", "text-secondary text-center py-3",
+      "No se pudieron cargar las reservas."));
   }
 }
 
-document.getElementById("m-liberar").addEventListener("click", async () => {
-  const boton = document.getElementById("m-liberar");
-  const cajaError = document.getElementById("m-error");
+function abrirReservas(c) {
+  cubiculoAbierto = c;
+  $("m-error").classList.add("d-none");
+  $("m-numero").textContent = c.numero;
+  const etiqueta = $("m-estado");
+  etiqueta.className = "etiqueta e-" + c.nivel;
+  etiqueta.textContent = ETIQUETAS[c.nivel];
+  $("m-lista").replaceChildren(el("div", "text-secondary text-center py-3", "Cargando..."));
+  modal.show();
+  cargarReservas();
+}
+
+async function liberar(idReserva, boton) {
+  const cajaError = $("m-error");
+  cajaError.classList.add("d-none");
   boton.disabled = true;
-  boton.textContent = "Liberando...";
   try {
-    const respuesta = await fetch("/api/reservas/" + reservaAbierta + "/liberar", { method: "POST" });
+    const respuesta = await fetch("/api/reservas/" + idReserva + "/liberar", { method: "POST" });
     if (respuesta.status === 401) { window.location.href = "/personal"; return; }
     const datos = await respuesta.json().catch(() => ({}));
     if (!respuesta.ok) {
-      cajaError.textContent = datos.error || "No se pudo liberar el cubículo.";
+      cajaError.textContent = datos.error || "No se pudo liberar la reserva.";
       cajaError.classList.remove("d-none");
-      return;
     }
-    modal.hide();
-    await cargar();   // el panel se actualiza de inmediato
   } catch (error) {
     cajaError.textContent = "No pudimos conectar con el servidor.";
     cajaError.classList.remove("d-none");
-  } finally {
-    boton.disabled = false;
-    boton.textContent = "Liberar cubículo";
   }
-});
+  await Promise.all([cargarReservas(), cargar()]);   // actualiza la ventana y el panel
+}
+
+$("modal-reservas").addEventListener("hidden.bs.modal", () => { cubiculoAbierto = null; });
 
 cargar();
 setInterval(cargar, 15000);
+setInterval(cargarReservas, 15000);   // solo actúa si la ventana está abierta
