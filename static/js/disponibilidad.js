@@ -45,27 +45,25 @@ function crearTarjeta(c) {
 
   const detalle = document.createElement("p");
   detalle.className = "cubiculo-detalle";
-  if (libre) {
-    detalle.textContent = "Para " + c.capacidad_minima + " o más personas";
-  } else {
-    detalle.textContent = "Se libera a las " + hora(c.se_libera_a);
-  }
+  detalle.textContent = libre
+    ? "Para " + c.capacidad_minima + " o más personas"
+    : "Se libera a las " + hora(c.se_libera_a);
 
   tarjeta.append(cabecera, estado, detalle);
 
-  if (libre) {
-    const enlace = document.createElement("a");
-    enlace.className = "btn btn-verde w-100";
-    enlace.href = "/reservar/" + c.numero;
-    enlace.textContent = "Reservar";
-    tarjeta.appendChild(enlace);
-  } else {
-    const boton = document.createElement("button");
-    boton.className = "btn btn-no-disponible w-100";
-    boton.disabled = true;
-    boton.textContent = "No disponible";
-    tarjeta.appendChild(boton);
+  if (c.proxima_reserva) {
+    const proxima = document.createElement("p");
+    proxima.className = "cubiculo-proxima";
+    proxima.textContent = "Próxima reserva: " + hora(c.proxima_reserva);
+    tarjeta.appendChild(proxima);
   }
+
+  // Siempre se puede reservar: si está ocupado ahora, se elige otro horario
+  const enlace = document.createElement("a");
+  enlace.className = libre ? "btn btn-verde w-100" : "btn btn-otro-horario w-100";
+  enlace.href = "/reservar/" + c.numero;
+  enlace.textContent = libre ? "Reservar" : "Reservar en otro horario";
+  tarjeta.appendChild(enlace);
 
   col.appendChild(tarjeta);
   return col;
@@ -89,9 +87,10 @@ async function cargar() {
 
     const ahora = new Date().toTimeString().substring(0, 5);
     document.getElementById("subtitulo").textContent =
-      "Elige uno libre y reserva un bloque de 2 horas (" + ahora + ").";
+      "Elige un cubículo y reserva un bloque de 2 horas (" + ahora + ").";
     avisoError.classList.add("d-none");
   } catch (error) {
+    console.error(error);
     avisoError.textContent = "No pudimos actualizar la disponibilidad. Reintentando...";
     avisoError.classList.remove("d-none");
   }

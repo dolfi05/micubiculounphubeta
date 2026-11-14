@@ -13,6 +13,10 @@ let cantidad = 1;
 let otros = [];    // datos escritos de los integrantes 2..n
 let campos = [];   // referencias a los inputs, para marcar errores
 
+function hora(textoIso) {
+  return textoIso.substring(11, 16);   // "2026-11-09T10:00:00" -> "10:00"
+}
+
 function mostrarErrores(lista) {
   listaErrores.replaceChildren();
   for (const mensaje of lista) {
@@ -120,7 +124,7 @@ function validar() {
   const errores = [];
 
   if (!inicioIso(selectorHora.value)) {
-    errores.push("Escribe la hora de inicio (por ejemplo 14:35).");
+    errores.push("Elige la hora de inicio.");
   }
   if (cantidad < cubiculo.capacidad_minima) {
     errores.push("El cubículo " + cubiculo.numero + " requiere al menos " + cubiculo.capacidad_minima +
@@ -205,11 +209,23 @@ async function iniciar() {
     const [rSesion, rCubiculos] = await Promise.all([fetch("/api/sesion"), fetch("/api/cubiculos")]);
     const sesion = await rSesion.json();
     if (sesion.rol !== "estudiante") { window.location.href = "/"; return; }
-    if (!rCubiculos.ok) throw new Error("cubiculos");
+    if (!rCubiculos.ok) throw new Error("No se pudo leer /api/cubiculos (HTTP " + rCubiculos.status + ")");
 
     cubiculo = (await rCubiculos.json()).find((c) => c.numero === numero);
     if (!cubiculo) { window.location.href = "/disponibilidad"; return; }
     yo = sesion;
+
+    // Si está ocupado ahora, se avisa: se puede reservar en otro horario
+    if (cubiculo.estado !== "disponible") {
+      const aviso = document.getElementById("aviso-ocupado");
+      if (aviso) {
+        const hasta = cubiculo.se_libera_a ? " hasta las " + hora(cubiculo.se_libera_a) : "";
+        aviso.textContent =
+          "Este cubículo está ocupado ahora" + hasta +
+          ". Puedes reservarlo en otro horario que no choque con las horas ocupadas.";
+        aviso.classList.remove("d-none");
+      }
+    }
 
     document.getElementById("mi-nombre").value = yo.nombre;
     document.getElementById("mi-matricula").value = yo.matricula;
@@ -219,12 +235,17 @@ async function iniciar() {
       "Este cubículo requiere mínimo " + cubiculo.capacidad_minima + " personas.";
 
     selectorHora.value = horaActualTexto();
-    cargarOcupadas(cubiculo.id_cubiculo, document.getElementById("ocupadas"));
-
     cantidad = cubiculo.capacidad_minima;   // empieza en el mínimo permitido
     actualizarResumen();
     actualizarCantidad();
+
+    // Horas ocupadas y primera hora libre como valor inicial
+    cargarOcupadas(cubiculo.id_cubiculo, document.getElementById("ocupadas")).then(() => {
+      selectorHora.value = primeraHoraLibre() || horaActualTexto();
+      actualizarResumen();
+    });
   } catch (error) {
+    console.error(error);   // deja el error real visible en la consola (F12)
     mostrarErrores(["No pudimos cargar los datos del cubículo. Recarga la página."]);
   }
 }

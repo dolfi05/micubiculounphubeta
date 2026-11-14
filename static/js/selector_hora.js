@@ -118,7 +118,7 @@
           }));
       }
 
-      // Columna de minutos (de la hora elegida, o de la primera libre)
+      // Columna de minutos (de la hora elegida, o de la primera hora del día)
       const horaBase = actual ? actual.h : lim.primera;
       const minutos = MINUTOS.map((m) => {
         const motivo = estado(horaBase, m);
@@ -162,6 +162,22 @@
       if (!caja.contains(e.target)) panel.classList.add("d-none");
     });
   }
+
+  // Primera hora elegible a partir de ahora (la hora exacta de ahora si está libre)
+  window.primeraHoraLibre = function () {
+    const lim = limites();
+    if (!lim) return null;
+    const ahora = new Date();
+    if (estado(ahora.getHours(), ahora.getMinutes()) === null) {
+      return dos(ahora.getHours()) + ":" + dos(ahora.getMinutes());
+    }
+    for (let h = lim.primera; h <= lim.ultima; h++) {
+      for (const m of MINUTOS) {
+        if (estado(h, m) === null) return dos(h) + ":" + dos(m);
+      }
+    }
+    return null;
+  };
 
   const campo = document.getElementById("hora");
   if (campo) activar(campo);
