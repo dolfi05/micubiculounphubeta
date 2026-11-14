@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<div class="row g-0 min-vh-100">
+
+  <div class="col-lg-6">
+    <div class="panel-verde h-100">
+      <div class="marca">
+        <div class="marca-icono">
+          <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#1B7A3F"
+               stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 4v8a6 6 0 0 0 12 0V4"/>
+            <path d="M9 11l2.2 2.2L15 9.5"/>
+          </svg>
+        </div>
+        <div>
+          <div class="marca-nombre">MiCubículo</div>
+          <div class="marca-sub">BIBLIOTECA UNPHU</div>
+        </div>
+      </div>
+
+      <div>
+        <h1>Reserva tu cubículo de estudio en minutos.</h1>
+        <p class="fs-5 mt-4 mb-0">Mira cuáles están libres, reserva por 2 horas y estudia en grupo.</p>
+      </div>
+
+      <ul>
+        <li>10 cubículos, en bloques de 2 horas</li>
+        <li>Mínimo 2 personas por cubículo</li>
+        <li>El cubículo 8 es para grupos de 7 o más</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col-lg-6 panel-derecho">
+    <div class="tarjeta-ingreso">
+      <div class="pestanas">
+        <a class="pestana activa" href="/">Estudiante</a>
+        <a class="pestana" href="/personal">Personal</a>
+      </div>
+
+      {% block formulario %}{% endblock %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}
