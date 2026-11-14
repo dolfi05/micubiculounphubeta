@@ -189,7 +189,7 @@ document.getElementById("form-reserva").addEventListener("submit", async (evento
     if (respuesta.status === 401) { window.location.href = "/"; return; }
     const datos = await respuesta.json().catch(() => ({}));
 
-    if (respuesta.ok) { window.location.href = "/reserva-confirmada"; return; }
+    if (respuesta.ok) { window.location.href = "/reserva-confirmada?id=" + datos.id_reserva; return; }
     if (datos.tipo === "cubiculo_ocupado") {
       window.location.href = "/reserva-conflicto?cubiculo=" + numero;
       return;

@@ -22,26 +22,28 @@ FROM (VALUES
 ) AS v(usuario, contrasena_hash, nombre)
 WHERE NOT EXISTS (SELECT 1 FROM PERSONAL p WHERE p.usuario = v.usuario);
 
--- 3. Limpiar reservas y estudiantes de pruebas anteriores
+-- 3. Limpiar reservas y estudiantes SIN cuenta (las cuentas registradas se conservan)
 DELETE FROM RESERVA_ESTUDIANTE;
 DELETE FROM RESERVA;
-DELETE FROM ESTUDIANTE;
+DELETE FROM ESTUDIANTE WHERE contrasena_hash IS NULL;
 DBCC CHECKIDENT ('RESERVA', RESEED, 0);
-DBCC CHECKIDENT ('ESTUDIANTE', RESEED, 0);
 
--- 4. Estudiantes de prueba (formato NN-NNNN)
-INSERT INTO ESTUDIANTE (matricula, nombre) VALUES
-('24-0509', 'Stacy Alcantara'),
-('24-0081', 'Dolfi Alvarez'),
-('25-0681', 'Emil Dirocie'),
-('26-0001', 'Estudiante Prueba 1'),
-('26-0002', 'Estudiante Prueba 2'),
-('26-0003', 'Estudiante Prueba 3'),
-('26-0004', 'Estudiante Prueba 4'),
-('26-0005', 'Estudiante Prueba 5'),
-('26-0006', 'Estudiante Prueba 6'),
-('26-0007', 'Estudiante Prueba 7'),
-('26-0008', 'Estudiante Prueba 8');
+-- 4. Estudiantes de prueba (solo los que falten)
+INSERT INTO ESTUDIANTE (matricula, nombre)
+SELECT v.matricula, v.nombre
+FROM (VALUES
+    ('24-0509', 'Stacy Alcantara'),
+    ('24-0081', 'Dolfi Alvarez'),
+    ('26-0001', 'Estudiante Prueba 1'),
+    ('26-0002', 'Estudiante Prueba 2'),
+    ('26-0003', 'Estudiante Prueba 3'),
+    ('26-0004', 'Estudiante Prueba 4'),
+    ('26-0005', 'Estudiante Prueba 5'),
+    ('26-0006', 'Estudiante Prueba 6'),
+    ('26-0007', 'Estudiante Prueba 7'),
+    ('26-0008', 'Estudiante Prueba 8')
+) AS v(matricula, nombre)
+WHERE NOT EXISTS (SELECT 1 FROM ESTUDIANTE e WHERE e.matricula = v.matricula);
 
 -- 5. Reservas de prueba (horas relativas al momento de ejecutar el script)
 DECLARE @ahora DATETIME = GETDATE();

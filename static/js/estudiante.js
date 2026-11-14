@@ -81,13 +81,14 @@ async function revisarAvisoDiezMinutos() {
   if (!sesionValida) return;
   if (document.querySelector(".aviso-flotante")) return;   // ya hay uno en pantalla
   try {
-    const respuesta = await fetch("/api/mi-reserva");
+    const respuesta = await fetch("/api/mis-reservas");
     if (!respuesta.ok) return;
-    const r = (await respuesta.json()).reserva;
-    if (!r || r.estado !== "activa" || r.segundos_restantes === null) return;
-    if (r.segundos_restantes > 0 && r.segundos_restantes <= 600 && !yaAvisado(r)) {
-      mostrarAviso(r);   // se marca como visto al pulsar "Entendido"
-    }
+    const reservas = await respuesta.json();
+    // Cualquiera de tus reservas en curso con 10 minutos o menos que aún no avisó
+    const r = reservas.find((x) =>
+      x.estado === "activa" && x.segundos_restantes !== null &&
+      x.segundos_restantes > 0 && x.segundos_restantes <= 600 && !yaAvisado(x));
+    if (r) mostrarAviso(r);   // se marca como visto al pulsar "Entendido"
   } catch (error) { /* se reintenta en la próxima revisión */ }
 }
 

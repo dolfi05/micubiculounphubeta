@@ -371,6 +371,45 @@ def mi_reserva():
         "integrantes": detalle["integrantes"],
     }}), 200
 
+@app.route("/api/mis-reservas", methods=["GET"])
+@estudiante_requerido
+def mis_reservas():
+    conn = get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "EXEC sp_ReservasDeEstudiante @matricula = ?", (session["estudiante"]["matricula"],)
+        )
+        filas = cursor.fetchall()
+        cursor.nextset()   # pasa al segundo resultado: los integrantes
+        miembros = cursor.fetchall()
+        conn.commit()      # guarda la auto-liberacion de reservas vencidas
+    finally:
+        conn.close()
+
+    por_reserva = {}
+    for m in miembros:
+        por_reserva.setdefault(m.id_reserva, []).append({
+            "matricula": m.matricula,
+            "nombre": m.nombre,
+            "es_responsable": bool(m.es_responsable),
+        })
+
+    reservas = [{
+        "id_reserva": f.id_reserva,
+        "numero": f.numero,
+        "tipo": f.tipo,
+        "estado": f.estado,
+        "hora_inicio": iso(f.hora_inicio),
+        "hora_fin": iso(f.hora_fin),
+        "cantidad_integrantes": f.cantidad_integrantes,
+        "es_responsable": bool(f.es_responsable),
+        "segundos_restantes": f.segundos_restantes,
+        "segundos_para_inicio": f.segundos_para_inicio,
+        "integrantes": por_reserva.get(f.id_reserva, []),
+    } for f in filas]
+    return jsonify(reservas), 200
+
 
 @app.route("/api/mi-reserva/cancelar", methods=["POST"])
 @estudiante_requerido

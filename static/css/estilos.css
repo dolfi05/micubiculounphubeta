@@ -892,3 +892,23 @@ h1, h2, h3, h4, h5, .fuente-titulo {
   border-color: #C9C5B5;
   color: #6B6B5F;
 }
+
+/* ---------- Mis reservas ---------- */
+.tarjeta-reserva {
+  background: #fff;
+  border: 1px solid #E6E2D6;
+  border-radius: 20px;
+  padding: 20px 24px;
+}
+
+.tarjeta-reserva-pasada { background: #FBFAF6; opacity: 0.9; }
+
+.reloj-chico {
+  font-family: "Sora", sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--verde-oscuro);
+}
+
+.reloj-chico.reloj-rojo { color: #A8403C; }
