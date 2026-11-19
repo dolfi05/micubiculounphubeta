@@ -31,7 +31,6 @@ Sistema de reserva de cubículos de estudio para la Biblioteca UNPHU. Hecho con 
 - Windows con Python 3.10 o superior
 - SQL Server (autenticación de Windows) y SSMS
 - ODBC Driver 17 o 18 para SQL Server
-- `sqlcmd` (viene con SSMS o con las utilidades de línea de comandos de SQL Server)
 
 ## Instalación
 
@@ -54,16 +53,45 @@ Los códigos de verificación se envían desde una cuenta de Gmail del proyecto.
 
 ### Base de datos
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\instalar_bd.ps1 -Datos
+La base de datos se instala ejecutando los archivos `.sql` de la carpeta `Database/` **desde SQL Server Management Studio (SSMS)**. No se usa ningún script de instalación: así cada archivo se ejecuta con la configuración correcta de SQL Server y los errores se ven al momento.
+
+**Cómo ejecutar cada archivo en SSMS**
+
+1. Abre SSMS y conéctate a tu servidor con autenticación de Windows.
+2. Menú `Archivo → Abrir → Archivo...` y elige el `.sql`.
+3. Pulsa `F5` (Ejecutar). En la pestaña **Mensajes** debe decir `Commands completed successfully`.
+4. Si aparece un error, corrígelo antes de continuar con el siguiente archivo.
+
+**Orden de instalación**
+
+Ejecuta los archivos en este orden, todos dentro de la carpeta `Database/`:
+
+1. `DB_Creacion.sql`: crea la base `MiCubiculoDB` y sus tablas. Solo en un servidor nuevo; si la base ya existe, sáltalo para no perder datos.
+2. `Migracion_Cuentas.sql`: cuentas de estudiantes y códigos de verificación.
+3. `Migracion_Entrega.sql`: entrega de carnés y llave.
+4. `Migracion_NoPresentado.sql`: estado de reserva "no presentado".
+5. Todos los `sp_*.sql`: procedimientos almacenados. Se ejecutan uno por uno, en cualquier orden.
+6. `Inyeccion_Prueba.sql`: opcional, estudiantes y reservas de prueba.
+
+Cada archivo de procedimientos empieza con `SET QUOTED_IDENTIFIER ON` y usa `CREATE OR ALTER PROCEDURE`, así que se puede volver a ejecutar sin perder datos.
+
+**Reinstalar o actualizar un procedimiento:** abre su `sp_*.sql` y ejecútalo con `F5`. No hace falta tocar la base ni los datos.
+
+**Comprobar que quedó bien.** Esta consulta no debe devolver filas (todos los procedimientos deben tener la opción activa):
+
+```sql
+USE MiCubiculoDB;
+SELECT OBJECT_NAME(object_id) AS procedimiento
+FROM sys.sql_modules
+WHERE OBJECT_NAME(object_id) LIKE 'sp[_]%'
+  AND uses_quoted_identifier = 0
+  AND OBJECT_NAME(object_id) NOT LIKE 'sp[_]%diagram%'
+  AND OBJECT_NAME(object_id) <> 'sp_upgraddiagrams';
 ```
 
-Este script crea la base si no existe, aplica las migraciones e instala todos los procedimientos almacenados. Si la base ya existe, conserva sus datos.
+Si la consulta devuelve algún nombre, abre el `.sql` de ese procedimiento y ejecútalo otra vez en SSMS.
 
-- Con `-Datos` también carga estudiantes y reservas de prueba.
-- Con `-Unir` no instala nada: genera `Database/Instalacion_Completa.sql`, un único archivo para quien solo tenga SSMS y no `sqlcmd`.
-
-Para comprobar la conexión: `python verificar_conexion.py`.
+Para comprobar la conexión desde Python: `python verificar_conexion.py`.
 
 ### Ejecutar
 
@@ -79,7 +107,6 @@ Abre http://127.0.0.1:5000. Para desarrollo con recarga automática se puede usa
 app.py                 rutas y lógica del servidor
 correo.py              envío de códigos por correo
 run.py                 arranque sin modo debug (entrega y defensa)
-instalar_bd.ps1        instalación de la base de datos
 Database/              creación, migraciones y procedimientos almacenados
 templates/             pantallas (Jinja)
 static/css, js, img    estilos, scripts e imágenes
@@ -102,7 +129,7 @@ Una rama por funcionalidad. La persona que escribe sube la rama y abre el Pull R
 - Bloqueo temporal de la cuenta tras varios intentos fallidos.
 - Aviso por correo cuando una reserva se cancela por no presentarse.
 - Gestión de renovaciones
-- Lista de espera por orden de llegada 
+- Lista de espera por orden de llegada
 - Reportes de ocupación por cubículo y horario
 
 ## Equipo
