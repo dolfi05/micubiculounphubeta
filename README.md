@@ -71,7 +71,6 @@ Ejecuta los archivos en este orden, todos dentro de la carpeta `Database/`:
 3. `Migracion_Entrega.sql`: entrega de carnés y llave.
 4. `Migracion_NoPresentado.sql`: estado de reserva "no presentado".
 5. Todos los `sp_*.sql`: procedimientos almacenados. Se ejecutan uno por uno, en cualquier orden.
-6. `Inyeccion_Prueba.sql`: opcional, estudiantes y reservas de prueba.
 
 Cada archivo de procedimientos empieza con `SET QUOTED_IDENTIFIER ON` y usa `CREATE OR ALTER PROCEDURE`, así que se puede volver a ejecutar sin perder datos.
 
