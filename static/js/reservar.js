@@ -133,6 +133,7 @@ function validar() {
 
   const vistas = new Map();
   vistas.set(yo.matricula, 1);
+  let integrantesIncompletos = 0;
 
   otros.forEach((d, i) => {
     const n = i + 2;
@@ -140,12 +141,11 @@ function validar() {
     const nombre = d.nombre.trim();
     const matricula = d.matricula.trim();
 
+    if (!nombre || !matricula) integrantesIncompletos++;
     if (!nombre) {
-      errores.push("Falta el nombre del integrante " + n + ".");
       marcar(c.nombre, c.errNombre, "Escribe el nombre de este integrante.");
     }
     if (!matricula) {
-      errores.push("Falta la matrícula del integrante " + n + ".");
       marcar(c.matricula, c.errMatricula, "Escribe la matrícula de este integrante.");
     } else if (!MATRICULA_VALIDA.test(matricula)) {
       errores.push("La matrícula del integrante " + n + " no es válida.");
@@ -157,6 +157,17 @@ function validar() {
       vistas.set(matricula, n);
     }
   });
+
+  // Un solo aviso con la regla del cubículo, en lugar de un mensaje por cada campo vacío.
+  if (integrantesIncompletos > 0) {
+    const regla = cubiculo.capacidad_minima > 2
+      ? "El cubículo " + cubiculo.numero + " es para grupos de " + cubiculo.capacidad_minima + " o más personas."
+      : "El cubículo " + cubiculo.numero + " requiere al menos " + cubiculo.capacidad_minima + " personas.";
+    const faltan = integrantesIncompletos === 1
+      ? "Completa el nombre y la matrícula del integrante que falta (se marca en rojo abajo)."
+      : "Completa el nombre y la matrícula de los " + integrantesIncompletos + " integrantes que faltan (se marcan en rojo abajo).";
+    errores.push(regla + " " + faltan);
+  }
   return errores;
 }
 
